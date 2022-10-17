@@ -1,5 +1,8 @@
-# `mutable` so it can be modified
-mutable struct MathExpr 
+module MathExprs
+
+# `mutable` so its intances can be modified
+# Base.@kwdef -> macro that allows default values and keyword-based constructors
+Base.@kwdef mutable struct MathExpr 
     """
     isconstant :: Bool
     isparameter :: Bool 
@@ -14,14 +17,26 @@ mutable struct MathExpr
     leftExpr
     rightExpr
     """
+    # 
+    arity :: Int = 0
+
+    #
+    constant  :: Bool  = false
+    parameter :: Bool = false
+    operator  :: Bool = false
+
+    #
+    value       :: Float64 = 0.0
+    parameterId :: Int = 0
+    operatorId  :: String = ""
+
+    #
+    leftChild  :: Union{MathExpr, Nothing} = nothing
+    rightChild :: Union{MathExpr, Nothing} = nothing
 end
 
-function print(mathExpr)
-end
+randomExpr = MathExpr(constant= true, value = 2.0)
 
-function toSymbolic(mathExpr: MathExpr)
-end
+println(randomExpr.value)
 
-function evaluateExpr(mathExpr: MathExpr, inputs: [Float64])
 end
-
