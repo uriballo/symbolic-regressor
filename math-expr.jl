@@ -45,28 +45,38 @@ function addNode(expr :: MathExpr, newNode :: MathExpr, position:: Int)
 end
 
 function binaryOperationNode(op:: MathExpr, leftParam :: MathExpr, rightParam :: MathExpr)
-    addNode(op, leftParam, 0)
-    addNode(op, rightParam, 1)
+    op2 = op
+    op2.leftChild = leftParam
+    op2.rightChild = rightParam
+    op = op2
+    #addNode(op, leftParam, 0)
+    #addNode(op, rightParam, 1)
 end
 
 function unaryOperationNode(op:: MathExpr, param :: MathExpr)
-    addNode(op, param, 0)
+    op2 = op
+    op2.leftChild = param
+    op = op2
+    #addNode(op, param, 0)
 end
 
 # Tests
 # 2.3 + 2.6
 expression = MathExpr(operator = true, operatorId = "+")
 
-addNode(expression, MathExpr(constant = true, value = 2.3), 0)
-addNode(expression, MathExpr(constant = true, value = 2.6), 1)
+#addNode(expression, MathExpr(constant = true, value = 2.3), 0)
+#addNode(expression, MathExpr(constant = true, value = 2.6), 1)
 
-printTree(expression)
+xpr2 = (binaryOperationNode(MathExpr(operator = true, operatorId = "+"), MathExpr(constant = true, value = 2.3), MathExpr(constant = true, value = 2.8)))
+printTree(xpr2)
 # x1^3 + 2x3 -1 
 # TODO: Fix Method ERROR
 plus = MathExpr(operator = true, operatorId = "+")
 minus = MathExpr(operator = true, operatorId = "-")
 cube = MathExpr(operator = true, operatorId = "³") 
 mult = MathExpr(operator = true, operatorId = "⋅")
+
+expression3 = plus
 
 x1 = MathExpr(parameter = true, parameterId = 1)
 x3 = MathExpr(parameter = true, parameterId = 3)
@@ -79,8 +89,8 @@ x1Cube = unaryOperationNode(cube, x1)
 twoX3 = binaryOperationNode(mult, x3, two)
 twoX3m1 = binaryOperationNode(minus, twoX3, one)
 
-expression2 = MathExpr(plus, x1Cube, twoX3m1)
-
+expression2 = binaryOperationNode(plus, x1Cube, twoX3m1)
+println()
 printTree(expression2)
 
 println()
