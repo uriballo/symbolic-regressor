@@ -1,40 +1,28 @@
 module MathExprs
 
-# `mutable` so its intances can be modified
-# Base.@kwdef -> macro that allows default values and keyword-based constructors
+# Struct that represents a math expression.
+#   * `mutable` -> keyword that makes instances modifiable, required for genetic mutations.
+#   * `Base.@kwdef` -> macro that allows default values and keyword-based constructors.
 Base.@kwdef mutable struct MathExpr 
-    """
-    isconstant :: Bool
-    isparameter :: Bool 
-    isoperator :: Bool
-
-    constantVal :: Float64
-    parameterIndex :: Int
-    operator:: ? ∈ [+, -, *, /, log, sin, cos, tan, e^, ^]
-
-    arity :: Int ∈ [0,2] i.e. constant, unary-operator, binary-operator.
-
-    leftExpr
-    rightExpr
-    """
-    # 
+    # Arity. 
     arity :: Int = 0
 
-    #
-    constant  :: Bool  = false
+    # Expression type.
+    constant  :: Bool = false
     parameter :: Bool = false
     operator  :: Bool = false
 
-    #
+    # Expression values.
     value       :: Float64 = 0.0
     parameterId :: Int = 0
     operatorId  :: String = ""
 
-    #
+    # Childs for arity >=1 expressions.
     leftChild  :: Union{MathExpr, Nothing} = nothing
     rightChild :: Union{MathExpr, Nothing} = nothing
 end
 
+# TESTS
 randomExpr = MathExpr(constant= true, value = 2.0)
 
 println(randomExpr.value)
