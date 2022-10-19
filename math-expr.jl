@@ -1,4 +1,5 @@
 module MathExprs
+using SymbolicUtils
 
 # Struct that represents a math expression.
 #   * `mutable` -> keyword that makes instances modifiable, required for genetic mutations.
@@ -16,6 +17,8 @@ Base.@kwdef mutable struct MathExpr
     value       :: Float64 = 0.0
     parameterId :: Int = 0
     operatorId  :: String = ""
+
+    opratorF :: Function = identity
 
     # Childs for arity >=1 expressions.
     leftChild  :: Union{MathExpr, Nothing} = nothing
@@ -45,6 +48,7 @@ function addNode(expr :: MathExpr, newNode :: MathExpr, position:: Int)
 end
 
 function binaryOperationNode(op:: MathExpr, leftParam :: MathExpr, rightParam :: MathExpr)
+    # must create a copy, otherwise we won't mutate the full parameter expression.
     op2 = op
     op2.leftChild = leftParam
     op2.rightChild = rightParam
@@ -54,11 +58,58 @@ function binaryOperationNode(op:: MathExpr, leftParam :: MathExpr, rightParam ::
 end
 
 function unaryOperationNode(op:: MathExpr, param :: MathExpr)
+    # must create a copy, otherwise we won't mutate the full parameter expression.
     op2 = op
     op2.leftChild = param
     op = op2
     #addNode(op, param, 0)
 end
+
+# Calculates the number of nodes in a math expression
+function exprNodes(expr:: MathExpr):: Int
+    if(expr.arity == 0) # constant or parameter
+        return 1
+    elseif (expr.arity == 1) # unary operator
+        return 1 + exprNodes(expr.leftChild)
+    else
+        return 1 + exprNodes(expr.leftChild) + exprNodes(expr.rightChild)
+    end
+end
+
+# Calculates the complexity (as depth) of the math expression.
+function exprComplexity(expr:: MathExpr)::Int
+    if(expr.arity == 0) # constant or parameter
+        return 1
+    elseif (expr.arity == 1) # unary operator
+        return 1 + exprComplexity(expr.leftChild)
+    else
+        return 1 + max(exprComplexity(expr.leftChild) + exprComplexity(expr.rightChild))
+    end
+
+end
+
+# Converts all params to constants for a given set of inputs
+function mapInputsToParams(expr :: MathExpr, inputs :: Array{Float})
+
+end
+
+# Evaluates a MathExpr.
+#   * the expression must have been converted so it has all params mapped to inputs.
+function evaluateExpr(expr :: MathExpr):: Float64
+"""
+if leaf 
+    return expr.value
+elif unaryOperator
+    return expr.operatorId(eval(op.leftChild)))
+else
+    retrun op(op.leftChild, rightChild)
+"""
+end
+
+# Converts the expression from MathExpr → symbolic and simplifies it.
+function simplifyExpr(expr:: MathExpr)
+end
+
 
 # Tests
 # 2.3 + 2.6
@@ -69,8 +120,8 @@ expression = MathExpr(operator = true, operatorId = "+")
 
 xpr2 = (binaryOperationNode(MathExpr(operator = true, operatorId = "+"), MathExpr(constant = true, value = 2.3), MathExpr(constant = true, value = 2.8)))
 printTree(xpr2)
+
 # x1^3 + 2x3 -1 
-# TODO: Fix Method ERROR
 plus = MathExpr(operator = true, operatorId = "+")
 minus = MathExpr(operator = true, operatorId = "-")
 cube = MathExpr(operator = true, operatorId = "³") 
