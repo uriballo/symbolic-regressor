@@ -11,5 +11,8 @@ x⁵(x)  = x^5
 # Exponentials
 eˣ(x) = ℯ^x # \euler to represent number 'e', Base.MathConstants.e
 
+function strToOperator(operator:: String)::Function
+    #
+end
 
 end
