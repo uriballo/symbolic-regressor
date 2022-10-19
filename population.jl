@@ -13,9 +13,8 @@ Base.@kwdef mutable struct Population
     mutationFunc :: Function = identity
     
     mutationProb :: Float64 = 0.0
-    
 end
 
-function evolve()
+function evolve(iterations:: Int)
 
 end

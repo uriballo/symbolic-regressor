@@ -144,6 +144,25 @@ else
     end
 end
 
+function indexToNode(expr:: MathExpr, index:: Int)
+    if (index == 0)
+        return expr
+    else
+    
+        # probably wont work bc once recursion untangles we'll have
+        # old index value passed to right child.
+        indexToNode(expr.leftChild, index-1)
+        indexToNode(expr.rightChild, index-1)
+    end 
+end
+
+function randomNode(expr:: MathExpr):: MathExpr
+    nodes = exprNodes(expr)
+    index = rand(1:nodes)
+    
+    return indexToNode(expr, index)
+end
+
 # Converts the expression from MathExpr → symbolic and simplifies it.
 function simplifyExpr(expr:: MathExpr)
 end
