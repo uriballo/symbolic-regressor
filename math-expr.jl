@@ -1,4 +1,5 @@
 module MathExprs
+using Operators
 using SymbolicUtils
 
 # Struct that represents a math expression.
@@ -89,8 +90,38 @@ function exprComplexity(expr:: MathExpr)::Int
 end
 
 # Converts all params to constants for a given set of inputs
+#   * i.e. makes an instance of a mathExpr
 function mapInputsToParams(expr :: MathExpr, inputs :: Array{Float})
+    if(expr.arity == 0)
+        if(expr.parameter) # if param -> sub in corresponding value
+            auxExpr = expr
+            auxExpr.parameter = false
+            auxExpr.constant = true
+            auxExpr.value = inputs[expr.parameterId]
+            expr = auxExpr
+        end
+    else 
+        mapInputsToParams(expr.leftChild, inputs)
+        mapInputsToParams(expr.rightChild, inputs)
+    end   
+end
 
+# Adds the operator functions to a mathExpr
+function subOperators(expr:: MathExpr)
+    if(expr.arity == 0)
+        return
+    else if (expr.arity == 1)
+        auxExpr = expr
+        auxExpr.operatorF = Operators.strToOperator(auxExpr.operatorId)
+        expr = auxExpr
+        subOperators(expr.leftChild)
+    else 
+        auxExpr = expr
+        auxExpr.operatorF = Operators.strToOperator(auxExpr.operatorId)
+        expr = auxExpr
+        subOperators(expr.leftChild)
+        subOperators(expr.rightChild)
+    end
 end
 
 # Evaluates a MathExpr.
@@ -100,10 +131,17 @@ function evaluateExpr(expr :: MathExpr):: Float64
 if leaf 
     return expr.value
 elif unaryOperator
-    return expr.operatorId(eval(op.leftChild)))
+    return op(eval(leftChild))
 else
-    retrun op(op.leftChild, rightChild)
+    retrun op(eval(leftChild), eval(rightChild))
 """
+    if (expr.arity == 0)
+        return expr.value
+    else if (expr.arity == 1)
+        return expr.operatorF(evaluateExpr(expr.leftChild))
+    else
+        return expr.operatorF(evaluateExpr(expr.leftChild), evaluateExpr(expr.rightChild))  
+    end
 end
 
 # Converts the expression from MathExpr → symbolic and simplifies it.
