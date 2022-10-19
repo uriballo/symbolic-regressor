@@ -1,10 +1,13 @@
+module GeneticOperations
 using MathExprs
 
-function mutate(expr :: MathExpr):: MathExpr
+function regularMutate(expr :: MathExpr):: MathExpr
 end
 
-function crossover(expr1 :: MathExpr, expr2 :: MathExpr):: MathExpr
+function regularCrossover(expr1 :: MathExpr, expr2 :: MathExpr):: MathExpr
 end
 
-function fitness(expr :: MathExpr, fitnessFunc :: Function):: Float64
+function regularFitness(expr :: MathExpr, fitnessFunc :: Function):: Float64
+end
+
 end
