@@ -1,5 +1,9 @@
 module Population
 
+include("math-expr.jl")
+include("operators.jl")
+include("genetic-operations.jl")
+
 using MathExpr
 using Operators
 using GeneticOperations
