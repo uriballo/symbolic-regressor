@@ -1,36 +1,39 @@
-"""
-# Tests
-# 2.3 + 2.6
-expression = MathExpr(operator = true, operatorId = "+")
+include("MathExpressions.jl")
 
-#addNode(expression, MathExpr(constant = true, value = 2.3), 0)
-#addNode(expression, MathExpr(constant = true, value = 2.6), 1)
+import .MathExpressions as me
 
-xpr2 = (binaryOperationNode(MathExpr(operator = true, operatorId = "+"), MathExpr(constant = true, value = 2.3), MathExpr(constant = true, value = 2.8)))
-printTree(xpr2)
+function main()
+    # Two Plus Twp
+    num2 = me.constantNode(2.0)
+    opTpt = me.operatorNode("+", num2, num2)
+    
+    println("Two Plus Two")
+    me.printTree(opTpt)
+    print(" = ")
+    print(me.evaluateExpr(opTpt))
+    println("\nn-nodes: ", me.exprNodes(opTpt))
+    println("complexity: ", me.exprComplexity(opTpt))
+    println("\n---")
 
-# x1^3 + 2x3 -1 
-plus = MathExpr(operator = true, operatorId = "+")
-minus = MathExpr(operator = true, operatorId = "-")
-cube = MathExpr(operator = true, operatorId = "³") 
-mult = MathExpr(operator = true, operatorId = "⋅")
+    # Two Plus Two Params
+    num2 = me.parameterNode(1)
+    opTpt = me.operatorNode("+", num2, num2)
+    
+    println("Two Plus Two")
+    me.printTree(opTpt)
+    print(" = ")
+    print(me.evaluateExpr(opTpt))
+    println("\nn-nodes: ", me.exprNodes(opTpt))
+    println("complexity: ", me.exprComplexity(opTpt))
+    println("\n---")
 
-expression3 = plus
+    # x squared
+    xSquare = me.operatorNode("^2", me.parameterNode(1))
+    println("x Squared")
+    me.printTree(xSquare)
 
-x1 = MathExpr(parameter = true, parameterId = 1)
-x3 = MathExpr(parameter = true, parameterId = 3)
+    println(" = ", me.evaluateExpr(xSquare, [3.2, 3.4, 43, 2]))
+    println("\n---")
+end
 
-one = MathExpr(constant = true, value = 1.0)
-
-two = MathExpr(constant = true, value = 2.0)
-
-x1Cube = unaryOperationNode(cube, x1)
-twoX3 = binaryOperationNode(mult, x3, two)
-twoX3m1 = binaryOperationNode(minus, twoX3, one)
-
-expression2 = binaryOperationNode(plus, x1Cube, twoX3m1)
-println()
-printTree(expression2)
-
-println()sxdszasdfgvfcdxzAsdfgtyhvc
-"""
+main()

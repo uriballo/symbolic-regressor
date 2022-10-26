@@ -15,7 +15,7 @@ eˣ(x) = ℯ^x # \euler to represent number 'e', Base.MathConstants.e
 function strToOperator(operator:: String)::Function
     @match operator begin
         "^-1" => x⁻¹
-        "^2"  => x²
+        "^2"  => x² 
         "^3"  => x³
         "^4"  => x⁴
         "^5"  => x⁵
