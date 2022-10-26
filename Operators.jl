@@ -28,31 +28,33 @@ mult  = Operator((x,y) -> x * y, "⋅")
 div   = Operator((x,y) -> x / y, "÷")
 powN  = Operator((x,y) -> x^y, "^")  
 
-# Custom Operators
-x⁻¹(x) = 1/x
-x²(x)  = x^2
-x³(x)  = x^3
-x⁴(x)  = x^4
-x⁵(x)  = x^5
-
-eˣ(x) = ℯ^x # \euler to represent number 'e', Base.MathConstants.e
-
-function strToOperator(operator:: String)::Function
+function strToOperator(operator:: String)::Operator
     @match operator begin
-        "^-1" => x⁻¹
-        "^2"  => x² 
-        "^3"  => x³
-        "^4"  => x⁴
-        "^5"  => x⁵
-        "sin" => sin
-        "cos" => cos
-        "+"   => +
-        "*"   => *
-        "/"   => /
-        "log" => log
-        "e^"  => eˣ
-        "sqr" => sqrt
-        _     => identity   
+        "^-1"  => inv
+        "inv"  => inv
+        "^2"   => pow2
+        "pow2" => pow2
+        "^3"   => pow3
+        "pow3" => pow3
+        "^4"   => pow4
+        "pow4" => pow4 
+        "^5"   => pow5
+        "pow5" => pow5
+        "sin"  => sin_
+        "cos"  => cos_
+        "+"    => plus
+        "plus" => plus
+        "*"    => mult
+        "mult" => mult
+        "/"    => div
+        "div"  => div
+        "log"  => log_
+        "e^"   => exp
+        "exp"  => exp
+        "sqr"  => sqrt_
+        "powN" => powN
+        "^n"   => powN
+        _      => identity   
     end    
 end
 

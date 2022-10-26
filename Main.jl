@@ -25,7 +25,7 @@ function main()
 
     # x squared
     xSquare = me.operatorNode("^2", me.parameterNode(1, "x"))
-    println("x Squared")
+    println("x=3.2 Squared")
     me.printTree(xSquare)
 
     println(" = ", me.evaluateExpr(xSquare, [3.2, 3.4, 43, 2]))

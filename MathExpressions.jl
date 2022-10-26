@@ -19,12 +19,10 @@ Base.@kwdef mutable struct MathExpr
     # Expression numerical values.
     value       :: Real = 0.0 # value of a constant or a parameter for a given instance.
     parameterId :: Int = 0    # index of the parameter e.g. 1 for x1, 3 for x3...  
-    parameterSymbol :: String = "x"
+    parameterSymbol :: String = "Χ"
 
     # Expression functional values.
     operatorId  :: String = ""       # id of the operator, see Operators.jl for available operators.
-    operatorF :: Function = identity # function associated to the id.
-
     operatorOp :: Operators.Operator = Operators.idtty
 
     # Childs for arity >=1 expressions.
@@ -48,14 +46,14 @@ end
 function operatorNode(id:: String, p1:: Union{MathExpr, Nothing}, p2::Union{MathExpr, Nothing}):: MathExpr
     operatorFunc = Operators.strToOperator(id)
 
-    return MathExpr(operator = true , arity = 2, operatorId = id, operatorF = operatorFunc, leftChild = p1, rightChild = p2)
+    return MathExpr(operator = true , arity = 2, operatorId = id, operatorOp = operatorFunc, leftChild = p1, rightChild = p2)
 end
 
 # Creates a MathExpr that represents an unary operation.
 function operatorNode(id:: String, p1:: Union{MathExpr, Nothing} = nothing):: MathExpr
     operatorFunc = Operators.strToOperator(id)
 
-    return MathExpr(operator = true , arity = 1, operatorId = id, operatorF = operatorFunc, leftChild = p1)
+    return MathExpr(operator = true , arity = 1, operatorId = id, operatorOp = operatorFunc, leftChild = p1)
 end
 
 # Prints a MathExpr through console.
@@ -66,7 +64,7 @@ function printTree(expr :: Union{MathExpr, Nothing})
 
     printTree(expr.leftChild)
 
-    expr.constant ? print(expr.value) : (expr.operator ? print(" ", expr.operatorId, " ") : print(expr.parameterSymbol))
+    expr.constant ? print(expr.value) : (expr.operator ? print(expr.operatorOp.symbol) : print(expr.parameterSymbol))
 
     printTree(expr.rightChild)
 end
@@ -100,9 +98,9 @@ function evaluateExpr(expr :: MathExpr):: Real
     if (expr.arity == 0)
         return expr.value
     elseif (expr.arity == 1)
-        return expr.operatorF(evaluateExpr(expr.leftChild))
+        return expr.operatorOp.application(evaluateExpr(expr.leftChild))
     else
-        return expr.operatorF(evaluateExpr(expr.leftChild), evaluateExpr(expr.rightChild))  
+        return expr.operatorOp.application(evaluateExpr(expr.leftChild), evaluateExpr(expr.rightChild))  
     end
 end
 
@@ -115,9 +113,9 @@ function evaluateExpr(expr :: MathExpr, inputs :: Vector{Float64}):: Real
             return expr.value
         end
     elseif (expr.arity == 1)
-        return expr.operatorF(evaluateExpr(expr.leftChild, inputs))
+        return expr.operatorOp.application(evaluateExpr(expr.leftChild, inputs))
     else
-        return expr.operatorF(evaluateExpr(expr.leftChild, inputs), evaluateExpr(expr.rightChild, inputs))  
+        return expr.operatorOp.application(evaluateExpr(expr.leftChild, inputs), evaluateExpr(expr.rightChild, inputs))  
     end
 end
 
