@@ -114,7 +114,7 @@ function evaluateExpr(expr :: MathExpr, inputs :: Vector{Float64}):: Real
     elseif (expr.arity == 1)
         return expr.operatorF(evaluateExpr(expr.leftChild, inputs))
     else
-        return expr.operatorF(evaluateExpr(expr.leftChild, inputs), evaluateExpr(expr.rightChild))  
+        return expr.operatorF(evaluateExpr(expr.leftChild, inputs), evaluateExpr(expr.rightChild, inputs))  
     end
 end
 
