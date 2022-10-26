@@ -3,7 +3,6 @@ module MathExpressions
 include("Operators.jl")
 
 using .Operators
-using SymbolicUtils
 
 # Struct that represents a math expression.
 #   * `mutable` -> keyword that makes instances modifiable, required for genetic mutations.
@@ -17,45 +16,46 @@ Base.@kwdef mutable struct MathExpr
     parameter :: Bool = false
     operator  :: Bool = false
 
-    # Expression values.
-    value       :: Real = 0.0
-    parameterId :: Int = 0
-    operatorId  :: String = ""
+    # Expression numerical values.
+    value       :: Real = 0.0 # value of a constant or a parameter for a given instance.
+    parameterId :: Int = 0    # index of the parameter e.g. 1 for x1, 3 for x3...  
 
-    operatorF :: Function = identity
+    # Expression functional values.
+    operatorId  :: String = ""       # id of the operator, see Operators.jl for available operators.
+    operatorF :: Function = identity # function associated to the id.
 
     # Childs for arity >=1 expressions.
-    leftChild  :: Union{MathExpr, Nothing} = nothing
-    rightChild :: Union{MathExpr, Nothing} = nothing
+    leftChild  :: Union{MathExpr, Nothing} = nothing # first parameter for binary operators or parameter of unary ones.
+    rightChild :: Union{MathExpr, Nothing} = nothing # second parameter for binary operators.
 end
 
+# Creates a MathExpr that represents a constant value.
 function constantNode(value :: Real)::MathExpr
     return MathExpr(constant = true, value = value, arity = 0)
 end
 
+# Creates a MathExpr that represents a parameter.
+#   * the 'id' will be the entry of the vector of inputs that will be used when evaluated.
+#   * id >= 1, since julia uses 1-based indexing.
 function parameterNode(id :: Int):: MathExpr
     return MathExpr(parameter = true, parameterId = id, arity = 0)
 end
 
-# Creates a _functional_ operator node.
+# Creates a MathExpr that respresents a binary operation.
 function operatorNode(id:: String, p1:: Union{MathExpr, Nothing}, p2::Union{MathExpr, Nothing}):: MathExpr
-    # If the types of p1 and p2 are different then we have just one parameter, if they are equal then we have
-    # either 2 or 0.
-    opArity = 2
     operatorFunc = Operators.strToOperator(id)
 
-    return MathExpr(operator = true , arity = opArity, operatorId = id, operatorF = operatorFunc, leftChild = p1, rightChild = p2)
+    return MathExpr(operator = true , arity = 2, operatorId = id, operatorF = operatorFunc, leftChild = p1, rightChild = p2)
 end
 
+# Creates a MathExpr that represents an unary operation.
 function operatorNode(id:: String, p1:: Union{MathExpr, Nothing} = nothing):: MathExpr
-    # If the types of p1 and p2 are different then we have just one parameter, if they are equal then we have
-    # either 2 or 0.
-    opArity = 1
     operatorFunc = Operators.strToOperator(id)
 
-    return MathExpr(operator = true , arity = opArity, operatorId = id, operatorF = operatorFunc, leftChild = p1)
+    return MathExpr(operator = true , arity = 1, operatorId = id, operatorF = operatorFunc, leftChild = p1)
 end
 
+# Prints a MathExpr through console.
 function printTree(expr :: Union{MathExpr, Nothing})
     if typeof(expr) == Nothing
         return
@@ -68,18 +68,18 @@ function printTree(expr :: Union{MathExpr, Nothing})
     printTree(expr.rightChild)
 end
 
-# Calculates the number of nodes in a math expression
+# Calculates the number of nodes in a MathExpr.
 function exprNodes(expr:: MathExpr):: Int
     if (expr.arity == 0) # constant or parameter
         return 1
     elseif (expr.arity == 1) # unary operator
         return 1 + exprNodes(expr.leftChild)
-    else
+    else # binary operator
         return 1 + exprNodes(expr.leftChild) + exprNodes(expr.rightChild)
     end
 end
 
-# Calculates the complexity (as depth) of the math expression.
+# Calculates the complexity (as depth) of a MathExpr.
 function exprComplexity(expr:: MathExpr)::Int
     if(expr.arity == 0) # constant or parameter
         return 1
@@ -91,25 +91,8 @@ function exprComplexity(expr:: MathExpr)::Int
 
 end
 
-# Adds the operator functions to a mathExpr
-function subOperators(expr:: MathExpr)
-    if(expr.arity == 0)
-        return
-    elseif (expr.arity == 1)
-        auxExpr = expr
-        auxExpr.operatorF = Operators.strToOperator(auxExpr.operatorId)
-        expr = auxExpr
-        subOperators(expr.leftChild)
-    else 
-        auxExpr = expr
-        auxExpr.operatorF = Operators.strToOperator(auxExpr.operatorId)
-        expr = auxExpr
-        subOperators(expr.leftChild)
-        subOperators(expr.rightChild)
-    end
-end
-
-# Evaluates a MathExpr without parameters.
+# Evaluates a MathExpr without any input parameters taken into account.
+#   * useful only for constant expressions.
 function evaluateExpr(expr :: MathExpr):: Real
     if (expr.arity == 0)
         return expr.value
@@ -120,7 +103,7 @@ function evaluateExpr(expr :: MathExpr):: Real
     end
 end
 
-# Evaluates a MathExpr with parameters.
+# Evaluates a MathExpr with input parameters.
 function evaluateExpr(expr :: MathExpr, inputs :: Vector{Float64}):: Real
     if (expr.arity == 0)
         if expr.parameter
@@ -133,28 +116,6 @@ function evaluateExpr(expr :: MathExpr, inputs :: Vector{Float64}):: Real
     else
         return expr.operatorF(evaluateExpr(expr.leftChild, inputs), evaluateExpr(expr.rightChild))  
     end
-end
-
-function indexToNode(expr:: MathExpr, index:: Int)
-    if (index == 0)
-        return expr
-    else
-        # probably wont work bc once recursion untangles we'll have
-        # old index value passed to right child.
-        indexToNode(expr.leftChild, index-1)
-        indexToNode(expr.rightChild, index-1)
-    end 
-end
-
-function randomNode(expr:: MathExpr):: MathExpr
-    nodes = exprNodes(expr)
-    index = rand(1:nodes)
-    
-    return indexToNode(expr, index)
-end
-
-# Converts the expression from MathExpr → symbolic and simplifies it.
-function simplifyExpr(expr:: MathExpr)
 end
 
 end
