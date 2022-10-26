@@ -19,6 +19,7 @@ Base.@kwdef mutable struct MathExpr
     # Expression numerical values.
     value       :: Real = 0.0 # value of a constant or a parameter for a given instance.
     parameterId :: Int = 0    # index of the parameter e.g. 1 for x1, 3 for x3...  
+    parameterSymbol :: String = "x"
 
     # Expression functional values.
     operatorId  :: String = ""       # id of the operator, see Operators.jl for available operators.
@@ -37,8 +38,8 @@ end
 # Creates a MathExpr that represents a parameter.
 #   * the 'id' will be the entry of the vector of inputs that will be used when evaluated.
 #   * id >= 1, since julia uses 1-based indexing.
-function parameterNode(id :: Int):: MathExpr
-    return MathExpr(parameter = true, parameterId = id, arity = 0)
+function parameterNode(id :: Int, symbol:: String):: MathExpr
+    return MathExpr(parameter = true, parameterId = id, arity = 0, parameterSymbol = symbol)
 end
 
 # Creates a MathExpr that respresents a binary operation.
@@ -63,7 +64,7 @@ function printTree(expr :: Union{MathExpr, Nothing})
 
     printTree(expr.leftChild)
 
-    expr.constant ? print(expr.value) : (expr.operator ? print(" ", expr.operatorId, " ") : print("x$(expr.parameterId)"))
+    expr.constant ? print(expr.value) : (expr.operator ? print(" ", expr.operatorId, " ") : print(expr.parameterSymbol))
 
     printTree(expr.rightChild)
 end
