@@ -56,8 +56,4 @@ function strToOperator(operator:: String)::Function
     end    
 end
 
-
-
-println("x", idty.symbol, " = ", idty.application(2))
-
 end

@@ -25,6 +25,8 @@ Base.@kwdef mutable struct MathExpr
     operatorId  :: String = ""       # id of the operator, see Operators.jl for available operators.
     operatorF :: Function = identity # function associated to the id.
 
+    operatorOp :: Operators.Operator = Operators.idtty
+
     # Childs for arity >=1 expressions.
     leftChild  :: Union{MathExpr, Nothing} = nothing # first parameter for binary operators or parameter of unary ones.
     rightChild :: Union{MathExpr, Nothing} = nothing # second parameter for binary operators.
@@ -118,5 +120,6 @@ function evaluateExpr(expr :: MathExpr, inputs :: Vector{Float64}):: Real
         return expr.operatorF(evaluateExpr(expr.leftChild, inputs), evaluateExpr(expr.rightChild, inputs))  
     end
 end
+
 
 end
