@@ -4,29 +4,29 @@ using Match
 
 struct Operator
     application::Function
-
     symbol::String
+    arity::Int
 end
 
 # Unary Operators
-idtty = Operator(x -> x, "𝐈")
-inv = Operator(x -> 1 / x, "⁻¹")
-pow2 = Operator(x -> x^2, "²")
-pow3 = Operator(x -> x^3, "³")
-pow4 = Operator(x -> x^4, "⁴")
-pow5 = Operator(x -> x^5, "⁵")
-exp = Operator(x -> e^x, "ℯ")
-sin_ = Operator(x -> sin(x), "sin")
-cos_ = Operator(x -> cos(x), "cos")
-log_ = Operator(x -> x < 0 ? 0 : log(x), "log")
-sqrt_ = Operator(x -> x < 0 ? 0 : sqrt(x), "√")
+idtty = Operator(x -> x, "𝐈", 1)
+inv = Operator(x -> 1 / x, "⁻¹", 1)
+pow2 = Operator(x -> x^2, "²", 1)
+pow3 = Operator(x -> x^3, "³", 1)
+pow4 = Operator(x -> x^4, "⁴", 1)
+pow5 = Operator(x -> x^5, "⁵", 1)
+exp = Operator(x -> exp(x), "ℯ", 1)
+sin_ = Operator(x -> sin(x), "sin", 1)
+cos_ = Operator(x -> cos(x), "cos", 1)
+log_ = Operator(x -> x < 0 ? 0 : log(x), "log", 1)
+sqrt_ = Operator(x -> x < 0 ? 0 : sqrt(x), "√", 1)
 
 # Binary Operators
-plus = Operator((x, y) -> x + y, "+")
-minus = Operator((x, y) -> x - y, "-")
-mult = Operator((x, y) -> x * y, "⋅")
-div = Operator((x, y) -> x / y, "÷")
-powN = Operator((x, y) -> x^y, "^")
+plus = Operator((x, y) -> x + y, "+", 2)
+minus = Operator((x, y) -> x - y, "-", 2)
+mult = Operator((x, y) -> x * y, "⋅", 2)
+div = Operator((x, y) -> x / y, "÷", 2)
+powN = Operator((x, y) -> x^y, "^", 2)
 
 function strToOperator(operator::String)::Operator
     @match operator begin

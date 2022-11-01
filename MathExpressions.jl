@@ -22,7 +22,6 @@ Base.@kwdef mutable struct MathExpr
     parameterSymbol::String = "Χ"
 
     # Expression functional values.
-    operatorId::String = ""       # id of the operator, see Operators.jl for available operators.
     operatorOp::Operators.Operator = Operators.idtty
 
     # Childs for arity >=1 expressions.
@@ -53,7 +52,6 @@ function operatorNode(
     return MathExpr(
         operator = true,
         arity = 2,
-        operatorId = id,
         operatorOp = operatorFunc,
         leftChild = p1,
         rightChild = p2,
@@ -67,35 +65,54 @@ function operatorNode(id::String, p1::Union{MathExpr,Nothing} = nothing)::MathEx
     return MathExpr(
         operator = true,
         arity = 1,
-        operatorId = id,
         operatorOp = operatorFunc,
         leftChild = p1,
     )
 end
 
+# Creates a MathExpr that represents an empty operator.
+function operatorNode(operatorF::Operators.Operator)::MathExpr
+    return MathExpr(
+        operator = true,
+        arity = operatorF.arity,
+        operatorOp = operatorF,
+    )
+end
+
 # Prints a MathExpr through console.
-function printTree(expr::Union{MathExpr,Nothing})
-    if typeof(expr) == Nothing
-        return
+function printTree(expr)   
+    if expr.arity > 0
+        printTree(expr.leftChild)
     end
 
-    printTree(expr.leftChild)
+    if expr.constant 
+        print(expr.value)
+    elseif expr.operator 
+        print(expr.operatorOp.symbol)
+    else
+        print(expr.parameterSymbol)
+    end
 
-    expr.constant ? print(expr.value) :
-    (expr.operator ? print(expr.operatorOp.symbol) : print(expr.parameterSymbol))
-
-    printTree(expr.rightChild)
+    #expr.constant ? print(expr.value) :
+    #(expr.operator ? print(expr.operatorOp.symbol) : print(expr.parameterSymbol))
+    if expr.arity == 2
+        printTree(expr.rightChild)
+    end
 end
 
 # Calculates the number of nodes in a MathExpr.
-function exprNodes(expr::MathExpr)::Int
+function countNodes(expr::MathExpr)::Int
     if (expr.arity == 0) # constant or parameter
         return 1
     elseif (expr.arity == 1) # unary operator
-        return 1 + exprNodes(expr.leftChild)
+        return 1 + countNodes(expr.leftChild)
     else # binary operator
-        return 1 + exprNodes(expr.leftChild) + exprNodes(expr.rightChild)
+        return 1 + countNodes(expr.leftChild) + countNodes(expr.rightChild)
     end
+end
+
+function countNodes(expr::Nothing)::Int
+    return 0
 end
 
 # Calculates the complexity (as depth) of a MathExpr.
@@ -141,6 +158,110 @@ function evaluateExpr(expr::MathExpr, inputs::Vector{Float64})::Real
             evaluateExpr(expr.rightChild, inputs),
         )
     end
+end
+
+# Auxiliary Functions
+
+# Conversions to MathExpr.
+function toMathExpr(expr::MathExpr)
+    expr
+end
+
+function toMathExpr(expr::Nothing):: MathExpr
+    return MathExpr()
+end
+
+# Returns the nth node.
+function getNode(expr::Union{MathExpr,Nothing}, node::Int)::Union{MathExpr,Nothing}
+    if typeof(expr) != Nothing
+        if node == 0
+            return expr
+        else 
+            leftChildNode = nothing
+            rightChildNode = nothing 
+
+            if expr.arity >= 1
+                leftChildNode = getNode(expr.leftChild, node - 1) 
+            end
+        
+            if expr.arity > 1 
+                rightChildNode = getNode(expr.rightChild, node - countNodes(expr.leftChild) -1 )
+            end
+
+            return typeof(rightChildNode) == Nothing ? leftChildNode : rightChildNode
+        end
+    end
+end
+
+function replaceNode(expr::Union{MathExpr,Nothing}, nnode::Int, nodeExpr::MathExpr)
+    if typeof(expr) != Nothing
+        if nnode == 0
+            expr = nodeExpr
+        else 
+            replaceNode(expr.leftChild, nnode -1, nodeExpr)
+            replaceNode(expr.rightChild, nnode -1 - countNodes(expr.leftChild), nodeExpr)
+        end
+    end
+end
+
+# Operator -> Operator
+function replaceOperator(expr::MathExpr, operator::Operators.Operator)
+    if expr.arity == operator.arity
+       expr.operatorOp = operator
+       expr 
+    end
+    expr
+end
+
+# (Constant || Param) -> Param
+function replaceParameter(expr::MathExpr, param::Int, sym::String)
+    if expr.constant
+        expr.constant = false
+        expr.parameter = true
+        expr.value = 0.0
+    end
+
+    expr.parameterId = param
+    expr.parameterSymbol = sym
+
+    expr
+end
+
+# (Constant || Param) -> Constant
+function replaceConstant(expr::MathExpr, cvalue::Real)
+    if expr.parameter
+        expr.parameter = false
+        expr.constant = true
+        expr.parameterId = 0
+    end
+
+    expr.value = cvalue
+
+    expr
+end
+
+# Returns a random node.
+function randomNode(expr::MathExpr)::MathExpr    
+    randomValue = rand(0:countNodes(expr)-1)
+    toMathExpr(getNode(expr, randomValue))
+end
+
+function randomNode(params, operators)::MathExpr
+   type = rand(1:4)
+   if type == 1
+        return constantNode(10*rand())
+   elseif type == 2
+        param = rand(1:size(params, 1))
+
+        return parameterNode(param, params[param])
+   else
+        op = rand(1:size(operators,1))
+
+        return operatorNode(operators[op])
+   end 
+end
+
+function append(expr, side, apExpr)
 end
 
 end

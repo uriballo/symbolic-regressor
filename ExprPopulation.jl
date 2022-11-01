@@ -4,12 +4,11 @@ include("MathExpressions.jl")
 include("Operators.jl")
 include("GeneticOperations.jl")
 
-using .MathExpressions
-using .Operators
-using .GeneticOperations
+import .MathExpressions as me
+#using .GeneticOperations
 
 Base.@kwdef mutable struct Population
-    population2::Array{MathExpressions.MathExpr}
+    pop::Array{me.MathExpr} = []
 
     fitness::Function = identity
     crossoverFunc::Function = identity
@@ -17,8 +16,31 @@ Base.@kwdef mutable struct Population
 
     mutationProb::Float64 = 0.0
 
-    functionSet::Array{Operators.Operator} = []
-    terminalSet::Array{Real} = []
+    functionSet::Vector{me.Operators.Operator} = [me.Operators.plus, me.Operators.minus, me.Operators.mult, me.Operators.inv, me.Operators.pow2, me.Operators.pow3, me.Operators.sin_, me.Operators.exp]
+    terminalSet::Vector{String} = ["α", "η", "β"]
+
+    constantSet::Vector{String} = []
+    constantValues::Vector{Real} = []
+end
+
+function genPopulation()
+end
+
+function generateRandomExpr(size::Int)::me.MathExpr
+
+end
+
+function randomExpr(context)
+   root = me.randomNode(context.terminalSet, context.functionSet) 
+
+    if root.arity == 1
+        root.leftChild = randomExpr(context) 
+    elseif root.arity == 2
+        root.leftChild = randomExpr(context)
+        root.rightChild =randomExpr(context)
+    end 
+
+    root
 end
 
 end
