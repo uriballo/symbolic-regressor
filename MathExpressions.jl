@@ -16,10 +16,11 @@ Base.@kwdef mutable struct MathExpr
     parameter::Bool = false
     operator::Bool = false
 
-    # Expression numerical values.
+    # Expression values.
     value::Real = 0.0 # value of a constant or a parameter for a given instance.
     parameterId::Int = 0    # index of the parameter e.g. 1 for x1, 3 for x3...  
     parameterSymbol::String = "Χ"
+    constantSymbol::Bool = false
 
     # Expression functional values.
     operatorOp::Operators.Operator = Operators.idtty
@@ -32,6 +33,16 @@ end
 # Creates a MathExpr that represents a constant value.
 function constantNode(value::Real)::MathExpr
     return MathExpr(constant = true, value = value, arity = 0)
+end
+
+function constantNode(value::Real, symbol::String)::MathExpr
+    return MathExpr(
+        constant = true,
+        value = value,
+        arity = 0,
+        parameterSymbol = symbol,
+        constantSymbol = true,
+    )
 end
 
 # Creates a MathExpr that represents a parameter.
@@ -62,32 +73,23 @@ end
 function operatorNode(id::String, p1::Union{MathExpr,Nothing} = nothing)::MathExpr
     operatorFunc = Operators.strToOperator(id)
 
-    return MathExpr(
-        operator = true,
-        arity = 1,
-        operatorOp = operatorFunc,
-        leftChild = p1,
-    )
+    return MathExpr(operator = true, arity = 1, operatorOp = operatorFunc, leftChild = p1)
 end
 
 # Creates a MathExpr that represents an empty operator.
 function operatorNode(operatorF::Operators.Operator)::MathExpr
-    return MathExpr(
-        operator = true,
-        arity = operatorF.arity,
-        operatorOp = operatorF,
-    )
+    return MathExpr(operator = true, arity = operatorF.arity, operatorOp = operatorF)
 end
 
 # Prints a MathExpr through console.
-function printTree(expr)   
+function printTree(expr)
     if expr.arity > 0
         printTree(expr.leftChild)
     end
 
-    if expr.constant 
+    if expr.constant
         print(expr.value)
-    elseif expr.operator 
+    elseif expr.operator
         if expr.arity == 1
             print("(<-")
             print(expr.operatorOp.symbol)
@@ -111,7 +113,7 @@ function printTree(expr, level)
         printTree(expr.leftChild, level + 1)
 
         if expr.constant
-            value = expr.value
+            value = expr.constantSymbol ? expr.parameterSymbol : expr.value
         elseif expr.operator
             value = expr.operatorOp.symbol
         else
@@ -119,13 +121,13 @@ function printTree(expr, level)
         end
 
         trailing = expr.arity == 2 ? "〈" : (expr.arity == 0 ? " ⋮" : " ∠ ")
-        println(" " ^ (7 * level), "|$(value)|", trailing)
+        println(" "^(7 * level), "|$(value)|", trailing)
         printTree(expr.rightChild, level + 1)
     end
 end
 
 # Calculates the number of nodes in a MathExpr.
-function countNodes(expr::MathExpr)::Int
+function countNodes(expr)::Int
     if (expr.arity == 0) # constant or parameter
         return 1
     elseif (expr.arity == 1) # unary operator
@@ -177,7 +179,7 @@ function evaluateExpr(expr::MathExpr, inputs::Vector{Float64})::Real
     elseif (expr.arity == 1)
         return expr.operatorOp.application(evaluateExpr(expr.leftChild, inputs))
     else
-        return expr.operatorOp.application( # TODO: FAIL
+        return expr.operatorOp.application(
             evaluateExpr(expr.leftChild, inputs),
             evaluateExpr(expr.rightChild, inputs),
         )
@@ -191,7 +193,7 @@ function toMathExpr(expr::MathExpr)
     expr
 end
 
-function toMathExpr(expr::Nothing):: MathExpr
+function toMathExpr(expr::Nothing)::MathExpr
     return MathExpr()
 end
 
@@ -200,16 +202,17 @@ function getNode(expr::Union{MathExpr,Nothing}, node::Int)::Union{MathExpr,Nothi
     if typeof(expr) != Nothing
         if node == 0
             return expr
-        else 
+        else
             leftChildNode = nothing
-            rightChildNode = nothing 
+            rightChildNode = nothing
 
             if expr.arity >= 1
-                leftChildNode = getNode(expr.leftChild, node - 1) 
+                leftChildNode = getNode(expr.leftChild, node - 1)
             end
-        
-            if expr.arity > 1 
-                rightChildNode = getNode(expr.rightChild, node - countNodes(expr.leftChild) -1 )
+
+            if expr.arity > 1
+                rightChildNode =
+                    getNode(expr.rightChild, node - countNodes(expr.leftChild) - 1)
             end
 
             return typeof(rightChildNode) == Nothing ? leftChildNode : rightChildNode
@@ -217,22 +220,17 @@ function getNode(expr::Union{MathExpr,Nothing}, node::Int)::Union{MathExpr,Nothi
     end
 end
 
-function replaceNode(expr::Union{MathExpr,Nothing}, nnode::Int, nodeExpr::MathExpr)
-    if typeof(expr) != Nothing
-        if nnode == 0
-            expr = nodeExpr
-        else 
-            replaceNode(expr.leftChild, nnode -1, nodeExpr)
-            replaceNode(expr.rightChild, nnode -1 - countNodes(expr.leftChild), nodeExpr)
-        end
-    end
+# Returns a random node.
+function getRandomNode(expr::MathExpr)::MathExpr
+    randomValue = rand(0:countNodes(expr)-1)
+    toMathExpr(getNode(expr, randomValue))
 end
 
 # Operator -> Operator
 function replaceOperator(expr::MathExpr, operator::Operators.Operator)
     if expr.arity == operator.arity
-       expr.operatorOp = operator
-       expr 
+        expr.operatorOp = operator
+        expr
     end
     expr
 end
@@ -264,28 +262,22 @@ function replaceConstant(expr::MathExpr, cvalue::Real)
     expr
 end
 
-# Returns a random node.
-function randomNode(expr::MathExpr)::MathExpr    
-    randomValue = rand(0:countNodes(expr)-1)
-    toMathExpr(getNode(expr, randomValue))
-end
 
-function randomNode(params, operators)::MathExpr
-   type = rand(1:4)
-   if type == 1
-        return constantNode(10*rand())
-   elseif type == 2
+
+function randomNode(params, operators, constants, constantvalues)::MathExpr
+    type = rand(1:3) 
+    if type == 1
+        ct = rand(1:size(constants, 1))
+        return constantNode(constants[ct], constantvalues[ct])
+    elseif type == 2
         param = rand(1:size(params, 1))
 
         return parameterNode(param, params[param])
-   else
-        op = rand(1:size(operators,1))
+    else
+        op = rand(1:size(operators, 1))
 
         return operatorNode(operators[op])
-   end 
-end
-
-function append(expr, side, apExpr)
+    end
 end
 
 end

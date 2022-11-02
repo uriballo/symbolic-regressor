@@ -8,10 +8,10 @@ function main()
     # Two Plus Twp
     num2 = me.constantNode(2.0)
     opTpt = me.operatorNode("+", num2, num2)
-        """
-        +
-    2        2
     """
+    +
+2        2
+"""
 
     println("Two Plus Two")
     me.printTree(opTpt)
@@ -62,19 +62,19 @@ function main()
     me.printTree(kp1)
     println(" = ", me.evaluateExpr(kp1, [5.2, 4332.62]))
     println()
-"""
-    for _ in 1:10 
-        randomNode = me.randomNode(kp1)
+    """
+        for _ in 1:10 
+            randomNode = me.randomNode(kp1)
 
-        if randomNode.parameter
-            println("\t\t", randomNode.parameterSymbol)
-        elseif randomNode.constant
-            println("\t\t", randomNode.value)
-        else
-            println("\t\t",randomNode.operatorOp.symbol)
+            if randomNode.parameter
+                println("\t\t", randomNode.parameterSymbol)
+            elseif randomNode.constant
+                println("\t\t", randomNode.value)
+            else
+                println("\t\t",randomNode.operatorOp.symbol)
+            end
         end
-    end
-"""
+    """
     kp1.leftChild.leftChild = me.replaceParameter(kp1.leftChild.leftChild, 2, "β")
     println("mod tree:")
     me.printTree(kp1)
@@ -86,8 +86,17 @@ function main()
     me.printTree(expr32, 0)
     println()
     print(" = ")
-    # TODO: FIX EVALUATION FAILING WHEN MULTIPLE UNARY OPERATORS
-    println( pp.me.evaluateExpr(expr32, [1.120, 2.320, 3.03, 3.4, 23.23, 123.2]))
+    println(pp.me.evaluateExpr(expr32, [1.120, 2.320, 3.03, 3.4, 23.23, 123.2]))
+    println()
+
+
+    n = me.countNodes(expr32) 
+    q = rand(0:n-1)
+    println("node to mutate: ", q)
+    kp3 = pp.mutateN(expr32, q, popl)
+    me.printTree(kp3, 0)
+        print(" = ")
+    println(pp.me.evaluateExpr(kp3, [1.120, 2.320, 3.03, 3.4, 23.23, 123.2]))
 end
 
 main()
