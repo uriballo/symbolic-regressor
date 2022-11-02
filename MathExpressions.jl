@@ -88,7 +88,13 @@ function printTree(expr)
     if expr.constant 
         print(expr.value)
     elseif expr.operator 
-        print(expr.operatorOp.symbol)
+        if expr.arity == 1
+            print("(<-")
+            print(expr.operatorOp.symbol)
+            print(")")
+        else
+            print(expr.operatorOp.symbol)
+        end
     else
         print(expr.parameterSymbol)
     end
@@ -97,6 +103,24 @@ function printTree(expr)
     #(expr.operator ? print(expr.operatorOp.symbol) : print(expr.parameterSymbol))
     if expr.arity == 2
         printTree(expr.rightChild)
+    end
+end
+
+function printTree(expr, level)
+    if typeof(expr) != Nothing
+        printTree(expr.leftChild, level + 1)
+
+        if expr.constant
+            value = expr.value
+        elseif expr.operator
+            value = expr.operatorOp.symbol
+        else
+            value = expr.parameterSymbol
+        end
+
+        trailing = expr.arity == 2 ? "〈" : (expr.arity == 0 ? " ⋮" : " ∠ ")
+        println(" " ^ (7 * level), "|$(value)|", trailing)
+        printTree(expr.rightChild, level + 1)
     end
 end
 
@@ -153,7 +177,7 @@ function evaluateExpr(expr::MathExpr, inputs::Vector{Float64})::Real
     elseif (expr.arity == 1)
         return expr.operatorOp.application(evaluateExpr(expr.leftChild, inputs))
     else
-        return expr.operatorOp.application(
+        return expr.operatorOp.application( # TODO: FAIL
             evaluateExpr(expr.leftChild, inputs),
             evaluateExpr(expr.rightChild, inputs),
         )

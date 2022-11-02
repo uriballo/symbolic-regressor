@@ -16,7 +16,8 @@ Base.@kwdef mutable struct Population
 
     mutationProb::Float64 = 0.0
 
-    functionSet::Vector{me.Operators.Operator} = [me.Operators.plus, me.Operators.minus, me.Operators.mult, me.Operators.inv, me.Operators.pow2, me.Operators.pow3, me.Operators.sin_, me.Operators.exp]
+    functionSet::Vector{me.Operators.Operator} = [me.Operators.plus, me.Operators.minus, me.Operators.mult, me.Operators.inv, 
+        me.Operators.pow2, me.Operators.pow3, me.Operators.sin_, me.Operators.sqrt_, me.Operators.cos_]
     terminalSet::Vector{String} = ["α", "η", "β"]
 
     constantSet::Vector{String} = []
@@ -33,10 +34,11 @@ end
 function randomExpr(context)
    root = me.randomNode(context.terminalSet, context.functionSet) 
 
-    if root.arity == 1
+    if root.arity > 0
         root.leftChild = randomExpr(context) 
-    elseif root.arity == 2
-        root.leftChild = randomExpr(context)
+    end
+
+    if root.arity == 2
         root.rightChild =randomExpr(context)
     end 
 

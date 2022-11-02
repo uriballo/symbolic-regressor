@@ -82,8 +82,12 @@ function main()
     println("\n\n\n")
     popl = pp.Population()
     expr32 = pp.randomExpr(popl)
-    println(expr32)
-    me.printTree(expr32)
+    #println(expr32)
+    me.printTree(expr32, 0)
+    println()
+    print(" = ")
+    # TODO: FIX EVALUATION FAILING WHEN MULTIPLE UNARY OPERATORS
+    println( pp.me.evaluateExpr(expr32, [1.120, 2.320, 3.03, 3.4, 23.23, 123.2]))
 end
 
 main()
