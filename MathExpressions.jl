@@ -265,7 +265,7 @@ end
 
 
 function randomNode(params, operators, constants, constantvalues)::MathExpr
-    type = rand(1:3) 
+    type = rand(1:3)
     if type == 1
         ct = rand(1:size(constants, 1))
         return constantNode(constants[ct], constantvalues[ct])

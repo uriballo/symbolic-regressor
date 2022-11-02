@@ -53,7 +53,7 @@ function initPopulation(
     )
 
     exprs = Vector{me.MathExpr}()
-    for n in 1:size
+    for n = 1:size
         expr = randomExpr(ppl)
         append!(expr, exprs)
     end
@@ -85,7 +85,7 @@ end
 # mutates the nth node
 function mutateN(expr, node::Int, context)
     if node == 0
-        expr = randomExpr(context) 
+        expr = randomExpr(context)
     else
         leftChildNode = nothing
         rightChildNode = nothing

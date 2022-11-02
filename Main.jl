@@ -90,12 +90,12 @@ function main()
     println()
 
 
-    n = me.countNodes(expr32) 
+    n = me.countNodes(expr32)
     q = rand(0:n-1)
     println("node to mutate: ", q)
     kp3 = pp.mutateN(expr32, q, popl)
     me.printTree(kp3, 0)
-        print(" = ")
+    print(" = ")
     println(pp.me.evaluateExpr(kp3, [1.120, 2.320, 3.03, 3.4, 23.23, 123.2]))
 end
 

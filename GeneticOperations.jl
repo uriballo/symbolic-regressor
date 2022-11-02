@@ -14,10 +14,10 @@ function mutate(expr::me.MathExpr)::me.MathExpr
 end
 
 function regularMutate(expr, nodes)
-    if expr.arity > 0 
+    if expr.arity > 0
         regularMutate(expr.leftChild, nodes)
     end
-    
+
     n = rand(1:nodes)
     if n == 1
         expr = me.randomNode
