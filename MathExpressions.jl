@@ -30,6 +30,10 @@ Base.@kwdef mutable struct MathExpr
     rightChild::Union{MathExpr,Nothing} = nothing # second parameter for binary operators.
 end
 
+function Base.:(==)(x::MathExpr, y::MathExpr) 
+    x.constant == y.constant && x.parameter == y.parameter && x.operator == y.operator && x.value == y.value && x.parameterId == y.parameterId && x.parameterSymbol == y.parameterSymbol && x.constantSymbol == y.constantSymbol && x.operatorOp == y.operatorOp && x.leftChild == y.leftChild && x.rightChild == y.rightChild
+end
+
 # Creates a MathExpr that represents a constant value.
 function constantNode(value::Real)::MathExpr
     return MathExpr(constant = true, value = value, arity = 0)
@@ -169,7 +173,7 @@ function evaluateExpr(expr::MathExpr)::Real
 end
 
 # Evaluates a MathExpr with input parameters.
-function evaluateExpr(expr::MathExpr, inputs::Vector{Float64})::Real
+function evaluateExpr(expr::MathExpr, inputs)::Real
     if (expr.arity == 0)
         if expr.parameter
             return inputs[expr.parameterId]
@@ -262,14 +266,12 @@ function replaceConstant(expr::MathExpr, cvalue::Real)
     expr
 end
 
-
-
 function randomNode(params, operators, constants, constantvalues)::MathExpr
-    type = rand(1:3)
-    if type == 1
+    type = rand()
+    if type < 0.1
         ct = rand(1:size(constants, 1))
         return constantNode(constants[ct], constantvalues[ct])
-    elseif type == 2
+    elseif type < 0.55
         param = rand(1:size(params, 1))
 
         return parameterNode(param, params[param])

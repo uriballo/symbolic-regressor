@@ -1,3 +1,6 @@
+using CSV
+using DataFrames
+
 include("MathExpressions.jl")
 include("ExprPopulation.jl")
 
@@ -12,7 +15,7 @@ function main()
     +
 2        2
 """
-
+    """
     println("Two Plus Two")
     me.printTree(opTpt)
     print(" = ")
@@ -23,10 +26,11 @@ function main()
     num2 = me.parameterNode(1, "y")
     opTpt = me.operatorNode("+", num2, num2)
     """
+    """
         +
     y        y
     """
-
+    """
     println("Two Plus Two w/ Parameters")
     me.printTree(opTpt)
     print(" = ")
@@ -48,10 +52,11 @@ function main()
         me.operatorNode("^2", me.parameterNode(2, "T")),
     )
     """
+    """
                 ÷
             ^3      ^2
         R              T
-    """
+
     println("Kepler Instance: Earth")
     me.printTree(kp1)
     println(" = ", me.evaluateExpr(kp1, [1, 365.25]))
@@ -62,6 +67,7 @@ function main()
     me.printTree(kp1)
     println(" = ", me.evaluateExpr(kp1, [5.2, 4332.62]))
     println()
+    """
     """
         for _ in 1:10 
             randomNode = me.randomNode(kp1)
@@ -74,12 +80,12 @@ function main()
                 println("\t\t",randomNode.operatorOp.symbol)
             end
         end
-    """
+    
     kp1.leftChild.leftChild = me.replaceParameter(kp1.leftChild.leftChild, 2, "β")
     println("mod tree:")
     me.printTree(kp1)
 
-    println("\n\n\n")
+    println("\n\n\n expr32")
     popl = pp.Population()
     expr32 = pp.randomExpr(popl)
     #println(expr32)
@@ -92,11 +98,27 @@ function main()
 
     n = me.countNodes(expr32)
     q = rand(0:n-1)
-    println("node to mutate: ", q)
-    kp3 = pp.mutateN(expr32, q, popl)
+    println("kp3")
+kp3 = pp.mutateN(expr32, q, popl)
     me.printTree(kp3, 0)
     print(" = ")
     println(pp.me.evaluateExpr(kp3, [1.120, 2.320, 3.03, 3.4, 23.23, 123.2]))
+
+    println()
+    me.printTree(pp.crossover(expr32, kp3, popl), 0)
+        """
+    # POPULATION EVOLUTION
+    size = 20
+    inputs = CSV.read("symbolic-regressor/data/kepler1618-inputs.csv", DataFrame)
+    outputs = CSV.read("symbolic-regressor/data/kepler1618-outputs.csv", DataFrame)
+
+    outputVec = vec(Matrix(outputs))
+    inputMat = transpose(Matrix(inputs))
+    
+
+    popl = pp.initPopulation(size, inputMat, outputVec)
+    pp.evolve(popl, 10, 0, size, true)
+    #keplerPopulation = pp.initPopulation()
 end
 
 main()
