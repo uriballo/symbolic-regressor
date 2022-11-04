@@ -65,11 +65,10 @@ function randomExpr(config)
     root
 end
 
-function fitness(symexpr, inputsMatrix, outputsVector)
+function fitness(symexpr::sym.SymNode, inputsMatrix, outputsVector)
     # L2 Metric
 
     prediction = []
-
     for column in eachcol(inputsMatrix)
         pred = sym.eval(symexpr, column)
         push!(prediction, pred)
@@ -83,7 +82,11 @@ function fitness(symexpr, inputsMatrix, outputsVector)
 
     ftness = sqrt(sum((outnormalized - prednormalized) .^ 2)) #+ sym.complexity(symexpr)/20 # we want simple expressions
 
-    ftness === NaN ? 0 : ftness
+    ftness === NaN ? 999 : ftness
+end
+
+function fitness(symexpr::sym.Constant, inputsMatrix, outputsVector)
+    999 # we suppose that a constant does not model any phenomenon
 end
 
 function seed(size, config)
