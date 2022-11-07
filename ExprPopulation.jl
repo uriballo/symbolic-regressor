@@ -11,10 +11,10 @@ Base.@kwdef mutable struct Population
     pop::Array{me.MathExpr} = []
 
     fitness::Function = fitness
-    
+
     crossoverFunc::Function = crossover
     mutationFunc::Function = mutateN
-    
+
     mutationProb::Real = 0.1
 
     functionSet::Vector{me.Operators.Operator} = [
@@ -24,7 +24,7 @@ Base.@kwdef mutable struct Population
         #me.Operators.inv,
         me.Operators.div,
         me.Operators.pow2,
-        me.Operators.pow3
+        me.Operators.pow3,
         #me.Operators.sin_,
         #me.Operators.sqrt_,
         #me.Operators.cos_,
@@ -38,15 +38,8 @@ Base.@kwdef mutable struct Population
     outputs::Vector{Real} = zeros(3)
 end
 
-function initPopulation(
-    size::Int,
-    inputs,
-    outputs,
-)::Population
-    ppl = Population(
-        inputs = inputs,
-        outputs = outputs,
-    )
+function initPopulation(size::Int, inputs, outputs)::Population
+    ppl = Population(inputs = inputs, outputs = outputs)
 
     exprs = randomSet(size, ppl)
 
@@ -55,7 +48,7 @@ function initPopulation(
     ppl
 end
 
-function initPopulation(size::Int, inputs, outputs, symbols, constants) 
+function initPopulation(size::Int, inputs, outputs, symbols, constants)
     ppl = Population(
         inputs = inputs,
         outputs = outputs,
@@ -63,7 +56,7 @@ function initPopulation(size::Int, inputs, outputs, symbols, constants)
         constantSet = constants,
     )
     exprs = Vector{me.MathExpr}()
-    for _ in 1:size
+    for _ = 1:size
         expr = randomExpr(ppl)
         append!(exprs, expr)
     end
@@ -155,7 +148,7 @@ function fitness(expr, inputs::Matrix{Real}, outputs::Vector{Real})
         push!(fitnessess, me.evaluateExpr(expr, column) - outputs[i])
         i = i + 1
     end
-    1/(abs(sum(fitnessess)) + me.exprComplexity(expr))
+    1 / (abs(sum(fitnessess)) + me.exprComplexity(expr))
 end
 
 # Selects a random expr.
@@ -169,7 +162,7 @@ end
 function selectN(exprs, context, n)
     sortedExprs =
         sort(exprs, by = expr -> context.fitness(expr, context.inputs, context.outputs))
-    
+
     asc = reverse(sortedExprs)#[1:n]
     unique(asc)
 end
@@ -186,12 +179,12 @@ function evolve(population, steps, tol, psize, verbose = false)
             println("Best Expr:")
             me.printTree(be, 0)
         end
-        
+
         # Crossover
-        for _ = 1:size(selected,1)-1
+        for _ = 1:size(selected, 1)-1
             p1 = select(selected, population)
             p2 = select(selected, population)
-            
+
             child = crossover(p1, p2, population)
 
             push!(population.pop, child)
@@ -215,7 +208,7 @@ function evolve(population, steps, tol, psize, verbose = false)
         #population.pop = unique(selectN(population.pop, population, psize))
 
         println("#####################################")
-        for i = 1:size(population.pop,1)
+        for i = 1:size(population.pop, 1)
             println("Expr: ", i)
             me.printTree(population.pop[i], 0)
             println("\t\tevals to: \n")
@@ -225,7 +218,7 @@ function evolve(population, steps, tol, psize, verbose = false)
             println("---")
         end
         println("#####################################")
-        
+
     end
     println("\n\n##############################")
     println("Best Expr:")

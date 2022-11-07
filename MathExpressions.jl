@@ -30,8 +30,17 @@ Base.@kwdef mutable struct MathExpr
     rightChild::Union{MathExpr,Nothing} = nothing # second parameter for binary operators.
 end
 
-function Base.:(==)(x::MathExpr, y::MathExpr) 
-    x.constant == y.constant && x.parameter == y.parameter && x.operator == y.operator && x.value == y.value && x.parameterId == y.parameterId && x.parameterSymbol == y.parameterSymbol && x.constantSymbol == y.constantSymbol && x.operatorOp == y.operatorOp && x.leftChild == y.leftChild && x.rightChild == y.rightChild
+function Base.:(==)(x::MathExpr, y::MathExpr)
+    x.constant == y.constant &&
+        x.parameter == y.parameter &&
+        x.operator == y.operator &&
+        x.value == y.value &&
+        x.parameterId == y.parameterId &&
+        x.parameterSymbol == y.parameterSymbol &&
+        x.constantSymbol == y.constantSymbol &&
+        x.operatorOp == y.operatorOp &&
+        x.leftChild == y.leftChild &&
+        x.rightChild == y.rightChild
 end
 
 # Creates a MathExpr that represents a constant value.

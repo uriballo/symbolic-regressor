@@ -114,7 +114,7 @@ kp3 = pp.mutateN(expr32, q, popl)
 
     outputVec = vec(Matrix(outputs))
     inputMat = transpose(Matrix(inputs))
-    
+
 
     popl = pp.initPopulation(size, inputMat, outputVec)
     pp.evolve(popl, 10, 0, size, true)
