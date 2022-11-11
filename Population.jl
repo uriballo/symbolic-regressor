@@ -71,7 +71,7 @@ function randomNode(config)
     if type < config.constantProb
         ct = copy(config.constantSet[rand(1:length(config.constantSet))])
         ct
-    elseif type < config.terminalsProb
+    elseif type < config.terminalProb
         par = copy(config.terminalSet[rand(1:length(config.terminalSet))])
         par
     else
@@ -95,6 +95,21 @@ function randomExpr(config)
     root
 end
 
+function fitnessMSE(symexpr::sym.SymNode, inputs, outputs)
+    prediction = []
+
+    for column in eachcol(inputs)
+        pred = sym.eval(symexpr, column)
+        push!(prediction, pred)
+    end
+
+    if all(isone, prediction)
+        return 999
+    end
+
+    sum((prediction .- outputs) .^ 2) / length(outputs)
+end
+
 function fitness(symexpr::sym.SymNode, inputsMatrix, outputsVector)
     # L2 Metric
     prediction = []
@@ -114,7 +129,7 @@ function fitness(symexpr::sym.SymNode, inputsMatrix, outputsVector)
     prednormalized = prediction ./ normpred
     outnormalized = outputsVector ./ normout
 
-    ftness = sqrt(sum((outnormalized - prednormalized) .^ 2))
+    ftness = sqrt(sum((outnormalized .- prednormalized) .^ 2))
 
     ftness === NaN ? 999 : ftness
 end
@@ -289,8 +304,8 @@ BasicTerminals = [sym.Param("R", 1), sym.Param("T", 2)]
 BasicConstants = [sym.Constant("π", π)]
 
 #@time begin
-inputs = CSV.read("../data/kepler1618-inputs.csv", DataFrame)
-outputs = CSV.read("../data/kepler1618-outputs.csv", DataFrame)
+inputs = CSV.read("data/kepler1618-inputs.csv", DataFrame)
+outputs = CSV.read("data/kepler1618-outputs.csv", DataFrame)
 
 outputVec = vec(Matrix(outputs))
 inputMat = transpose(Matrix(inputs)) #isgood
