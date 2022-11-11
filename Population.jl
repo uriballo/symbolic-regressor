@@ -17,6 +17,12 @@ struct Config
     terminalSet::Vector{sym.Param}
     constantSet::Vector{sym.Constant}
 
+    constantProb::Float64 # Probability of a constant being chosen when creating a random expression.
+    terminalProb::Float64 # Probability of a terminal being chosen when creating a random expression.
+    operatorProb::Float64 # Probability of an operator being chosen when creating a random expression.
+
+    percentageofparents::Float64 # Percentage of parents to use per generation, ∈ (0, 1]
+
     inputs::Matrix{Float64}
     outputs::Vector{Float64}
 end
@@ -62,10 +68,10 @@ end
 
 function randomNode(config)
     type = rand()
-    if type < 0.05
+    if type < config.constantProb
         ct = copy(config.constantSet[rand(1:length(config.constantSet))])
         ct
-    elseif type < 0.55
+    elseif type < config.terminalsProb
         par = copy(config.terminalSet[rand(1:length(config.terminalSet))])
         par
     else
@@ -92,6 +98,7 @@ end
 function fitness(symexpr::sym.SymNode, inputsMatrix, outputsVector)
     # L2 Metric
     prediction = []
+
     for column in eachcol(inputsMatrix)
         pred = sym.eval(symexpr, column)
         push!(prediction, pred)
@@ -100,8 +107,6 @@ function fitness(symexpr::sym.SymNode, inputsMatrix, outputsVector)
     if all(isone, prediction)
         return 999
     end
-
-    #fitnessresult = abs(sum(prediction .- outputsVector)^2) / length(outputsVector)
 
     normpred = sqrt(sum(prediction .^ 2))
     normout = sqrt(sum(outputsVector .^ 2))
@@ -214,7 +219,7 @@ function evolve(population, iterations, config, verbose = false)
             println(population)
         end
 
-        popsize = size(population.population, 1)
+        popsize = trunc(Int, size(population.population, 1) * config.percentageofparents)
 
         # Selection
         chosenParents = select(population.population, config, popsize)
@@ -291,6 +296,9 @@ outputVec = vec(Matrix(outputs))
 inputMat = transpose(Matrix(inputs)) #isgood
 #end
 
+"""
+This config discovers Kepler's third law somewhat consistently.
+"""
 TestConfig = Config(
     fitness,
     crossover,
@@ -299,9 +307,14 @@ TestConfig = Config(
     BasicOperators,
     BasicTerminals,
     BasicConstants,
+    0.05,
+    0.55,
+    0.45,
+    1,
     inputMat,
     outputVec,
 )
+
 #@time begin
 poppl = SymPopulation(TestConfig, seed(35, TestConfig))
 evolve(poppl, 500, TestConfig, true)
