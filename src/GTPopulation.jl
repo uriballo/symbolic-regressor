@@ -84,7 +84,9 @@ function evolve(population, generations, verbose = false)
             println("Generation $i")
             println("Best Candidate: $(parents[1])")
             println("\tFitness: $(ctx.fitness(parents[1], ctx.inputs, ctx.outputs))")   
-            #println(population)
+            for x in eachcol(ctx.inputs)
+                println("\t", GT.eval(parents[1], x))
+            end
         end
 
         children = []
@@ -111,9 +113,9 @@ Parameters and indication by A Field Guide to Genetic Programming
 
 
 FuncSet = [
-    GT.GTUnaryNode(sin, "sin"),
-    GT.GTUnaryNode(cos, "cos"),
-    GT.GTUnaryNode(tan, "tan"),
+    #GT.GTUnaryNode(sin, "sin"),
+    #GT.GTUnaryNode(cos, "cos"),
+    #GT.GTUnaryNode(tan, "tan"),
     #GT.GTUnaryNode(exp, "ℯ^"), 
     GT.GTUnaryNode(x -> x^2, "²"),
     GT.GTUnaryNode(x -> x^3, "³"),
@@ -128,9 +130,9 @@ FuncSet = [
 TermSet = [
     GT.GTParameter(1, "R"),
     GT.GTParameter(2, "T"),
-    GT.GTConstant(1, "1"),
-    GT.GTConstant(π, "π"),
-    GT.GTConstant(2, "2"),
+    #GT.GTConstant(1, "1"),
+    #GT.GTConstant(π, "π"),
+    #GT.GTConstant(2, "2"),
     #GT.GTConstant(ℯ, "ℯ"),
 ]
 
@@ -151,8 +153,13 @@ samplePop = Population(GT.halfandhalf(500, sampleConfig.funcset, sampleConfig.te
 
 evolve(samplePop, 50, true)
 
-#kepler = GT.GTBinaryNode(/, "÷", [GT.GTUnaryNode(x -> x^3, "³", GT.GTParameter(1, "R")), GT.GTUnaryNode(x -> x^2, "²", GT.GTParameter(2, "T"))])
+kepler = GT.GTBinaryNode(/, "÷", [GT.GTUnaryNode(x -> x^3, "³", GT.GTParameter(1, "R")), GT.GTUnaryNode(x -> x^2, "²", GT.GTParameter(2, "T"))])
 
-#println(GT.L2fitness(kepler, sampleConfig.inputs, sampleConfig.outputs))
+println("KEPLER\n: ", GT.L2fitness(kepler, sampleConfig.inputs, sampleConfig.outputs))
+
+
+for x in eachcol(sampleConfig.inputs)
+    println(GT.eval(kepler, x))
+end
 
 end

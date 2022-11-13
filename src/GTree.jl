@@ -255,7 +255,7 @@ function pnorm(v, p)
 end
 
 function L2fitness(node, inputs, outputs)
-    predictions = [eval(node, x) for x in eachcol(inputs)] .* 10e5
+    predictions = [eval(node, x) for x in eachcol(inputs)]
     
     predictionnorm = pnorm(predictions, 2)
     outputnorm = pnorm(outputs, 2)
