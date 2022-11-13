@@ -119,7 +119,7 @@ FuncSet = [
     #GT.GTUnaryNode(exp, "ℯ^"), 
     GT.GTUnaryNode(x -> x^2, "²"),
     GT.GTUnaryNode(x -> x^3, "³"),
-    GT.GTUnaryNode(x -> x == 0 ? 1/0.001 : 1/x, "⁻¹"),
+    #GT.GTUnaryNode(x -> x == 0 ? 1/0.001 : 1/x, "⁻¹"),
     #GT.GTUnaryNode(x -> x^5, "⁵"),
     GT.GTBinaryNode(+, "+"),
     GT.GTBinaryNode(-, "-"),
@@ -151,7 +151,7 @@ sampleConfig = Config(
 
 samplePop = Population(GT.halfandhalf(500, sampleConfig.funcset, sampleConfig.termset, 1, 2), sampleConfig)
 
-evolve(samplePop, 50, true)
+evolve(samplePop, 10, true)
 
 kepler = GT.GTBinaryNode(/, "÷", [GT.GTUnaryNode(x -> x^3, "³", GT.GTParameter(1, "R")), GT.GTUnaryNode(x -> x^2, "²", GT.GTParameter(2, "T"))])
 
