@@ -160,7 +160,7 @@ function crossover(symexpr1::sym.Operator, symexpr2::sym.Operator)
 
     if choice < 0.5
         chosenNode = sym.random(symexpr1)
-        nodePosition = rand(0:sym.nnodes(symexpr2)-1)
+        nodePosition = rand(0:sym.nnodes(symexpr2) - 1)
         child = copy(symexpr2)
         child = sym.set(child, nodePosition, chosenNode)
     else
@@ -205,13 +205,32 @@ function seed(size, config)
     pop = Array{sym.SymNode,1}()
 
     while length(pop) < size
-        rexpr = randomExpr(config)
-        if rexpr ∉ pop
-            push!(pop, rexpr)
-        end
+            push!(pop, genrandexpr(config, rand(2:4)))
     end
 
     pop
+end
+
+function genrandexpr(config, depth) 
+    if depth == 0
+        config.terminalSet[rand(1:length(config.terminalSet))]
+    else
+        func = config.functionSet[rand(1:length(config.functionSet))]
+        
+        if func.arity == 1
+            func.leftInput = genrandexpr(config, depth-1)
+            func.rightInput = sym.Constant("", 0)
+        elseif func.arity == 2
+            func.leftInput = genrandexpr(config, depth-1)
+            func.rightInput = genrandexpr(config, depth-1)
+        end
+        func
+    end
+end
+
+# creates a seed using the half-and-half method.
+function halfandhalf(size, config) 
+
 end
 
 function select(population, config, n)
@@ -301,7 +320,7 @@ BasicOperators = [
 
 BasicTerminals = [sym.Param("R", 1), sym.Param("T", 2)]
 
-BasicConstants = [sym.Constant("π", π)]
+BasicConstants = [sym.Constant("1", 1)]
 
 #@time begin
 inputs = CSV.read("data/kepler1618-inputs.csv", DataFrame)
@@ -314,7 +333,7 @@ inputMat = transpose(Matrix(inputs)) #isgood
 """
 This config discovers Kepler's third law somewhat consistently.
 """
-TestConfig = Config(
+KeplerConfig = Config(
     fitness,
     crossover,
     mutate,
@@ -324,15 +343,31 @@ TestConfig = Config(
     BasicConstants,
     0.05,
     0.55,
-    0.45,
+    0.4,
     1,
     inputMat,
     outputVec,
 )
 
+TestConfig = Config(
+    fitness,
+    crossover,
+    mutate,
+    0.15,
+    BasicOperators,
+    BasicTerminals,
+    BasicConstants,
+    0.05,
+    0.55,
+    0.4,
+    0.5,
+    inputMat,
+    outputVec,
+)
+
 #@time begin
-poppl = SymPopulation(TestConfig, seed(35, TestConfig))
-evolve(poppl, 500, TestConfig, true)
+poppl = SymPopulation(TestConfig, seed(10, TestConfig))
+evolve(poppl, 1, TestConfig, true)
 println()
 #end
 
