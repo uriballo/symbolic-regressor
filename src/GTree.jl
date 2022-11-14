@@ -8,31 +8,33 @@ abstract type GTLeaf <: GTree end
 abstract type GTNode <: GTree end
 
 mutable struct GTConstant <: GTLeaf
-	val::Number
-	symbol::String
+    val::Number    # numerical value of the constant, e.g. 3.1415...
+	symbol::String # symbol that represents the constant, e.g. "π".
 end
 
 mutable struct GTParameter <: GTLeaf
-	id::Int
-	symbol::String
+	id::Int        # index of the parameter in the vector of inputs, e.g. 2 for the second input. 
+	symbol::String # symbol that represents the parameter, e.g. "x".
 end
 
 mutable struct GTUnaryNode <: GTNode
-	func::Function
-	symbol::String
-	input::GTree
-    arity::Int
+	func::Function # function/operation that the node represents.
+	symbol::String # symbol that represents the function/operation, e.g. "sin".
+	input::GTree   # input of the function/operation.
+    arity::Int     # arity of the operator, in this case 1.
 
+    # Constructors
     GTUnaryNode(func, symbol) = new(func, symbol, GTParameter(0, "∅"), 1)
     GTUnaryNode(func, symbol, input) = new(func, symbol, input, 1)
 end
 
 mutable struct GTBinaryNode <: GTNode
-	func::Function
-	symbol::String
-	input::Array{GTree, 1}
-    arity::Int
+	func::Function         # function/operation that the node represents.
+	symbol::String         # symbol that represents the function/operation, e.g. "+".
+	input::Array{GTree, 1} # inputs of the function/operation.
+    arity::Int             # arity of the operator, in this case 2.
 
+    # Constructors
     GTBinaryNode(func, symbol) = new(func, symbol, [GTParameter(0, "∅"), GTParameter(0, "∅")],2 )
     GTBinaryNode(func, symbol, input) = new(func, symbol, input, 2)
 end
@@ -41,41 +43,52 @@ end
 > Base Methods for GTree Type
 """
 
+# Prints a constant node symbol.
 function Base.show(io::IO, node::GTConstant)
 	print(io, node.symbol)
 end
 
+# Prints a parameter node symbol.
 function Base.show(io::IO, node::GTParameter)
 	print(io, node.symbol)
 end
 
+# Prints a unary node symbol and its input in prefix notation e.g. +(2, 2) for 2+2.
 function Base.show(io::IO, node::GTBinaryNode)
 	print(io, node.symbol, "(", node.input[1], ", ", node.input[2], ")")
 end
 
+# Prints a binary node symbol and its inputs in prefix notation e.g. ²(x) for x².
 function Base.show(io::IO, node::GTUnaryNode)
 	print(io, node.symbol, "(", node.input, ")")
 end
 
+# Returns a copy of a constant node.
 function Base.copy(node::GTConstant)
 	GTConstant(node.val, node.symbol)
 end
 
+# Returns a copy of a parameter node.
 function Base.copy(node::GTParameter)
 	GTParameter(node.id, node.symbol)
 end
 
+# Returns a copy of a unary node.
 function Base.copy(node::GTBinaryNode)
 	GTBinaryNode(node.func, node.symbol, [copy(node.input[1]), copy(node.input[2])])
 end
 
+# Returns a copy of a binary node.
 function Base.copy(node::GTUnaryNode)
 	GTUnaryNode(node.func, node.symbol, node.input)
 end
 
 """
-> GTree Utils
+> GTree Utils Multiple Dispatch
 """
+
+####################
+# Returns the number of nodes of a GTree.
 
 function nnodes(node::GTLeaf)
 	1
@@ -89,6 +102,9 @@ function nnodes(node::GTBinaryNode)
 	1 + nnodes(node.input[1]) + nnodes(node.input[2])
 end
 
+####################
+# Returns the depth of a GTree.
+
 function depth(node::GTLeaf)
 	1
 end
@@ -100,6 +116,9 @@ end
 function depth(node::GTBinaryNode)
 	1 + max(depth(node.input[1]), depth(node.input[2]))
 end
+
+####################
+# Returns the ith node (in preorder) of a GTree. 
 
 function get(node::GTLeaf, i::Int)
 	if i == 0
@@ -124,6 +143,9 @@ function get(node::GTBinaryNode, i::Int)
 		l === nothing ? get(node.input[2], i - 1 - nnodes(node.input[1])) : l
 	end
 end
+
+####################
+# Returns a copy of a GTree with the ith node (in preorder) replaced by a new node.
 
 function set(node::GTLeaf, i::Int, newnode)
     if i == 0
@@ -153,12 +175,33 @@ function set(node::GTBinaryNode, i::Int, newnode)
     end
 end
 
+####################
+# Returns the result of evaluating a GTree with an input vector x.
+
+function eval(node::GTConstant, x)
+    node.val
+end
+
+function eval(node::GTParameter, x)
+    x[node.id]
+end
+
+function eval(node::GTUnaryNode, x)
+    val = node.func(eval(node.input, x))
+
+    isfinite(val) && !isnan(val) ? val : NaN
+end
+
+function eval(node::GTBinaryNode, x)
+   val = node.func(eval(node.input[1], x), eval(node.input[2], x))
+
+   isfinite(val) && !isnan(val) ? val : NaN
+end
+
 """
 > GTree Things
 """
 
-# method 1 = grow
-# method 2 = full
 function randexpr(funcset, termset, maxdepth, method)
     tsize = length(termset)
     fsize = length(funcset)
@@ -181,31 +224,13 @@ function randexpr(funcset, termset, maxdepth, method)
 end
 
 function randexpr(funcset, termset)
-    randexpr(funcset, termset, 4, 2)
-end
-
-function eval(node::GTConstant, x)
-    node.val
-end
-
-function eval(node::GTParameter, x)
-    x[node.id]
-end
-
-function eval(node::GTUnaryNode, x)
-    val = node.func(eval(node.input, x))
-    isfinite(val) && !isnan(val) ? val : NaN
-end
-
-function eval(node::GTBinaryNode, x)
-   val = node.func(eval(node.input[1], x), eval(node.input[2], x))
-
-   isfinite(val) && !isnan(val) ? val : NaN
+    randexpr(funcset, termset, 3, 2)
 end
 
 """
 > Crossover Functions
 """
+
 function crossover(parent1, parent2)
     gene1 = get(parent1, rand(0:nnodes(parent1)-1))
     child = set(parent2, rand(0:nnodes(parent2)-1), gene1)
@@ -216,8 +241,9 @@ end
 """
 > Mutation Functions
 """
+
 function mutate(node, funcset, termset)
-    mutation = randexpr(funcset, termset, rand(1:2), 1)
+    mutation = randexpr(funcset, termset, rand(1:2), 2)
 
     mutationpoint = rand(0:nnodes(node)-1)
 
@@ -227,7 +253,7 @@ end
 """
 > Seeding Functions
 """
-# ramped half and half population
+# ramped half and half population (koza)
 function halfandhalf(size, funcset, termset, minsize, maxsize)
     population = []
 
@@ -249,6 +275,7 @@ end
 """
 > Fitness Functions
 """
+
 function pnorm(v, p)
     absv = abs.(v)
     sum((absv).^p)^(1/p)
@@ -264,30 +291,14 @@ function L2fitness(node, inputs, outputs)
 end
 
 function cosinesim(node, inputs, outputs)
-    predictions = []
+    predictions = [eval(node, x) for x in eachcol(inputs)]
 
-    for x in eachcol(inputs)
-        push!(predictions, eval(node, x))
-    end
-    
-    for x in eachcol(inputs)
-        println(x)
-    end
-
-    #if sum(predictions) / length(predictions) - 1 < 1e-6
-    #    return -2
-    #end
-    println("----")
-    println(node)
-    println("PRED: ", predictions)
-    println("OUTPUTS: ", outputs)
-    println("----")
     predictionnorm = pnorm(predictions, 2)
     
     outputnorm = pnorm(outputs, 2)
 
     sim = sum(predictions .* outputs) / (predictionnorm * outputnorm)
-    isnan(sim) || isinf(sim) ? -2 : sim 
+    isnan(sim) || isinf(sim) ? 999 : -sim 
 end
 
 function mse(node, inputs, outputs)
