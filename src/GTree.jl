@@ -199,9 +199,11 @@ function eval(node::GTBinaryNode, x)
 end
 
 """
-> GTree Things
+> GTree Genetic Operations
 """
 
+# Generates a random expression from a given set of functions, terminals, max depth and method.
+# The method can be either "grow" (1) or "full" (2).
 function randexpr(funcset, termset, maxdepth, method)
     tsize = length(termset)
     fsize = length(funcset)
@@ -223,14 +225,11 @@ function randexpr(funcset, termset, maxdepth, method)
     expr
 end
 
-function randexpr(funcset, termset)
-    randexpr(funcset, termset, 3, 2)
-end
-
 """
 > Crossover Functions
 """
 
+# Returns the one-point crossover of two GTrees.
 function crossover(parent1, parent2)
     gene1 = get(parent1, rand(0:nnodes(parent1)-1))
     child = set(parent2, rand(0:nnodes(parent2)-1), gene1)
@@ -242,6 +241,7 @@ end
 > Mutation Functions
 """
 
+# Returns a copy of the GTree with a mutation at a point. 
 function mutate(node, funcset, termset)
     mutation = randexpr(funcset, termset, rand(1:2), 2)
 
@@ -253,7 +253,10 @@ end
 """
 > Seeding Functions
 """
-# ramped half and half population (koza)
+
+# Returns an array of random GTrees.
+#   - half of the trees are generated with the "grow" method.
+#   - half of the trees are generated with the "full" method. 
 function halfandhalf(size, funcset, termset, minsize, maxsize)
     population = []
 
@@ -276,11 +279,15 @@ end
 > Fitness Functions
 """
 
+# Returns the p-norm of a vector v.
 function pnorm(v, p)
     absv = abs.(v)
     sum((absv).^p)^(1/p)
 end
 
+# Returns the fitness of a GTree using the L2 metric.
+#   - inputs is a matrix where each column is an input vector.
+#   - outputs is a vector with the output corresponding to each input vector.
 function L2fitness(node, inputs, outputs)
     predictions = [eval(node, x) for x in eachcol(inputs)]
     
@@ -290,6 +297,10 @@ function L2fitness(node, inputs, outputs)
     sqrt(sum((predictions .- outputs).^2)) / (predictionnorm * outputnorm)
 end
 
+# Returns the cosine similarity between the predicted values of a GTree and outputs.
+#   - inputs is a matrix where each column is an input vector.
+#   - outputs is a vector with the output corresponding to each input vector.
+#   - returns values between -1 and 1, the closer to 1 the better.
 function cosinesim(node, inputs, outputs)
     predictions = [eval(node, x) for x in eachcol(inputs)]
 
@@ -301,6 +312,9 @@ function cosinesim(node, inputs, outputs)
     isnan(sim) || isinf(sim) ? 999 : -sim 
 end
 
+# Returns the inverse mean square error of a GTree.
+#   - inputs is a matrix where each column is an input vector.
+#   - outputs is a vector with the output corresponding to each input vector.
 function mse(node, inputs, outputs)
     predictions = [eval(node, x) for x in eachcol(inputs)]
     

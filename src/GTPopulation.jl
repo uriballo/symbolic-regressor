@@ -8,25 +8,29 @@ include("GTree.jl")
 import .GTrees as GT
 
 struct Config
-    fitness::Function
-    crossover::Function
-    mutate::Function
-    selection::Function
+    fitness::Function   # Fitness function.
+    crossover::Function # Crossover function.
+    mutate::Function    # Mutation function.
+    selection::Function # Selection function.
 
-    mutationprob::Float64
+    mutationprob::Float64 # Probability of mutation.
 
-    termset::Array{GT.GTLeaf, 1}
-    funcset::Array{GT.GTNode, 1}
+    termset::Array{GT.GTLeaf, 1} # Terminal set (constants and parameters).
+    funcset::Array{GT.GTNode, 1} # Function set (operators).
 
-    inputs::Matrix{Float64}
-    outputs::Vector{Float64}
-    nparents::Int
+    inputs::Matrix{Float64}  # Input data.
+    outputs::Vector{Float64} # Output data.
+    nparents::Int64          # Number of parents selected per generation.
 end
 
 mutable struct Population
-    population::Array{GT.GTree,1}
-    context::Config
+    population::Array{GT.GTree,1} # Array of GTrees.
+    context::Config               # Configuration of the population.
 end
+
+"""
+> Base Methods for Population
+"""
 
 function Base.show(io::IO, pop::Population)
     println(io,"###############################")
@@ -37,8 +41,10 @@ function Base.show(io::IO, pop::Population)
 end
 
 """
-Population Dynamics
+> Population Methods
 """
+
+# TBD
 function roulette(population, n)
     winners = []
     inputs = population.context.inputs
@@ -50,6 +56,8 @@ function roulette(population, n)
     # TODO: finish
 end
 
+# Returns an array of size n with the n best GTrees from the population.
+#   - uses the fitness function from the population context as a metric.
 function elitist(population, n)
     inputs = population.context.inputs
     outputs = population.context.outputs
@@ -60,18 +68,23 @@ function elitist(population, n)
     sorted[1:n]
 end
 
+# Retruns a matrix with the inputs from 'filename'.
+#   - filename must be in the data folder.
 function loadinputs(filename)
     inputs = CSV.read("../data/" * filename, DataFrame)
 
     transpose(Matrix(inputs))
 end
 
+# Returns a vector with the outputs from 'filename'.
+#   - filename must be in the data folder.
 function loadoutputs(filename)
     outputs = CSV.read("../data/" * filename, DataFrame)
 
     vec(Matrix(outputs))
 end
 
+# Evolves the population over the number of specified generations.
 function evolve(population, generations, verbose = false)
     ctx = population.context
     pop = population.population
@@ -81,7 +94,7 @@ function evolve(population, generations, verbose = false)
 
         if verbose 
             println("#############################")
-            println("Generation $i")
+            println("# Generation $i")
             println("Best Candidate: $(parents[1])")
             println("\tFitness: $(ctx.fitness(parents[1], ctx.inputs, ctx.outputs))")  
         end
@@ -98,6 +111,12 @@ function evolve(population, generations, verbose = false)
 
         population.population = vcat(parents, children)
     end
+
+    final = elitist(population, 1)[1]
+    println("\n\n#############################")
+    println("# Final Generation")
+    println("Best Candidate: $(final)")
+    println("\tFitness: $(ctx.fitness(final, ctx.inputs, ctx.outputs))")  
 end
 
 
