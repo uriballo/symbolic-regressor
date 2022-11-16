@@ -15,8 +15,8 @@ struct Config
 
     mutationprob::Float64 # Probability of mutation.
 
-    termset::Array{GT.GTLeaf, 1} # Terminal set (constants and parameters).
-    funcset::Array{GT.GTNode, 1} # Function set (operators).
+    termset::Array{GT.GTLeaf,1} # Terminal set (constants and parameters).
+    funcset::Array{GT.GTNode,1} # Function set (operators).
 
     inputs::Matrix{Float64}  # Input data.
     outputs::Vector{Float64} # Output data.
@@ -33,9 +33,9 @@ end
 """
 
 function Base.show(io::IO, pop::Population)
-    println(io,"###############################")
-    println(io,"# Population Size: ", length(pop.population))
-    for i in 1:length(pop.population)
+    println(io, "###############################")
+    println(io, "# Population Size: ", length(pop.population))
+    for i = 1:length(pop.population)
         println(io, "> $i.", pop.population[i])
     end
 end
@@ -89,18 +89,18 @@ function evolve(population, generations, verbose = false)
     ctx = population.context
     pop = population.population
 
-    for i in 1:generations
+    for i = 1:generations
         parents = elitist(population, ctx.nparents)
 
-        if verbose 
+        if verbose
             println("#############################")
             println("# Generation $i")
             println("Best Candidate: $(parents[1])")
-            println("\tFitness: $(ctx.fitness(parents[1], ctx.inputs, ctx.outputs))")  
+            println("\tFitness: $(ctx.fitness(parents[1], ctx.inputs, ctx.outputs))")
         end
 
         children = []
-        for parent in parents 
+        for parent in parents
             secondparent = parents[rand(1:length(parents))]
             child = ctx.crossover(parent, secondparent)
             if rand() < ctx.mutationprob
@@ -116,32 +116,85 @@ function evolve(population, generations, verbose = false)
     println("\n\n#############################")
     println("# Final Generation")
     println("Best Candidate: $(final)")
-    println("\tFitness: $(ctx.fitness(final, ctx.inputs, ctx.outputs))")  
+    println("\tFitness: $(ctx.fitness(final, ctx.inputs, ctx.outputs))")
 end
 
+"""
+> Sample Configs
+"""
 
-"""
-Parameters by A Field Guide to Genetic Programming
-    population size (should be at least 500)
-    probability of mutation
-    > (half-and-half) range 2-6 is optimal
-    number of generations betweem 10 and 50
-"""
+function genpopconfig(
+    defaultconfig,
+    inputs,
+    outputs,
+    fitness,
+    crossover,
+    mutation,
+    mutationprob,
+    nparents,
+    popsize,
+    usedefault = false,
+)
+    if usedefault
+        conf = defaultconfig == "trig" ? trigConfig : sampleConfig
+    else
+        fitnessfunc = fitness == "l2" ? GT.L2fitness : GT.cosinesim
+        conf = Config(
+            fitnessfunc,
+            GT.crossover,
+            GT.mutate,
+            elitist,
+            mutationprob,
+            TermSet,
+            FuncSet,
+            loadinputs(inputs),
+            loadoutputs(outputs),
+            nparents,
+        )
+    end
+    Population(GT.halfandhalf(popsize, conf.funcset, conf.termset, 2, 6), conf)
+end
 
 FuncSet = [
     GT.GTUnaryNode(x -> x^2, "²"),
     GT.GTUnaryNode(x -> x^3, "³"),
-    GT.GTUnaryNode(x -> 1/x, "⁻¹"),
+    GT.GTUnaryNode(x -> 1 / x, "⁻¹"),
     GT.GTBinaryNode(+, "+"),
     GT.GTBinaryNode(-, "-"),
     GT.GTBinaryNode(*, "×"),
     GT.GTBinaryNode(/, "÷"),
 ]
 
-TermSet = [
-    GT.GTParameter(1, "R"),
-    GT.GTParameter(2, "T"),
+TermSet = [GT.GTParameter(1, "R"), GT.GTParameter(2, "T")]
+
+TrigFuncSet = [
+    #GT.GTUnaryNode(sin, "sin"),
+    GT.GTUnaryNode(cos, "cos"),
+    GT.GTUnaryNode(tan, "tan"),
+    GT.GTUnaryNode(x -> x^2, "²"),
+    #GT.GTUnaryNode(x -> x^3, "³"),
+    #GT.GTUnaryNode(x -> 1/x, "⁻¹"),
+    GT.GTBinaryNode(+, "+"),
+    GT.GTBinaryNode(-, "-"),
+    GT.GTBinaryNode(*, "×"),
+    GT.GTBinaryNode(/, "÷"),
+    GT.GTUnaryNode(x -> sqrt(abs(x)), "√"),
 ]
+
+TrigTermSet = [GT.GTParameter(1, "θ"), GT.GTConstant(π, "π"), GT.GTConstant(1, "1")]
+
+trigConfig = Config(
+    GT.L2fitness,
+    GT.crossover,
+    GT.mutate,
+    elitist,
+    0.15,
+    TrigTermSet,
+    TrigFuncSet,
+    loadinputs("sine-inputs.csv"),
+    loadoutputs("sine-outputs.csv"),
+    250,
+)
 
 sampleConfig = Config(
     GT.L2fitness,
@@ -153,20 +206,17 @@ sampleConfig = Config(
     FuncSet,
     loadinputs("kepler1618-inputs.csv"),
     loadoutputs("kepler1618-outputs.csv"),
-    250
+    250,
 )
 
-samplePop = Population(GT.halfandhalf(500, sampleConfig.funcset, sampleConfig.termset, 2, 6), sampleConfig)
+samplePop = Population(
+    GT.halfandhalf(500, sampleConfig.funcset, sampleConfig.termset, 2, 6),
+    sampleConfig,
+)
 
-evolve(samplePop, 10, true)
+trigPop = Population(
+    GT.halfandhalf(500, trigConfig.funcset, trigConfig.termset, 1, 4),
+    trigConfig,
+)
 
-"""
-kepler = GT.GTBinaryNode(/, "÷", [GT.GTUnaryNode(x -> x^3, "³", GT.GTParameter(1, "R")), GT.GTUnaryNode(x -> x^2, "²", GT.GTParameter(2, "T"))])
-
-println("KEPLER\n: ", GT.L2fitness(kepler, sampleConfig.inputs, sampleConfig.outputs))
-
-for x in eachcol(sampleConfig.inputs)
-    println(GT.eval(kepler, x))
-end
-"""
 end
