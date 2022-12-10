@@ -110,11 +110,13 @@ function evolve(context, generations, verbose = false)
     for i = 1:generations
         parents = select(context, trunc(Int, nparents * length(context.population)))
 
+        bestfitness =  fitness(parents[1], inputs, outputs)
+
         if verbose
             println("#############################")
             println("# Generation $i")
             println("Best Candidate: $(parents[1])")
-            println("\tFitness: $(fitness(parents[1], inputs, outputs))")
+            println("\tFitness: $(bestfitness)")
         end
 
         children = []
@@ -122,7 +124,8 @@ function evolve(context, generations, verbose = false)
             secondparent = parents[rand(1:length(parents))]
             child = crossover(parent, secondparent)
             if rand() < mutationprob
-                child = mutate(child, funcset, termset)
+                mutatedChild = mutate(child, funcset, termset)
+                push!(children, mutatedChild)
             end
 
             push!(children, child)

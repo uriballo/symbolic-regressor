@@ -3,8 +3,8 @@
     "output": "/sin-pow2/sin-pow2-output.csv",
     "generations": 50,
     "population-size": 500,
-    "mutation-prob": 0.2,
-    "parents-selected": 0.5,
+    "mutation-prob": 1,
+    "parents-selected": 0.33,
     "function-set": ["^2", "cos", "+"],
     "constant-set": [
         {
