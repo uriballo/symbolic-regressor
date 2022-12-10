@@ -20,6 +20,6 @@
     ],
     "fitness-function": "errorfitness",
     "crossover-function": "crossover",
-    "mutation-function": "mutate",
+    "mutation-function": "2mutate",
     "selection-function": "elitist"
 }

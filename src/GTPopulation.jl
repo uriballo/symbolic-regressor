@@ -2,6 +2,7 @@ module GTPopulation
 
 using CSV
 using DataFrames
+using StatsBase
 
 include("GTree.jl")
 include("Utils.jl")
@@ -46,19 +47,26 @@ end
 """
 
 # Implements the tournament selection function.
-function tournamentselection(context, pop, tournamentsize, nwinners)
-    inputs = context.inputs
-    outputs = context.outputs
-    fitness = context.fitness
+function rouletteselection(context, n) # TODO FIX!!
+    inputs      = context.config.inputs
+    outputs     = context.config.outputs
+    population  = context.population
+    fitness     = context.config.fitness
 
-    tournamentgroup = rand(pop, tournamentsize)
+    fitnesses = [fitness(x, inputs, outputs) for x in population]
+
+    totalfitness = sum(fitnesses)
+
+    probabilities = [f / totalfitness for f in fitnesses]
+
     winners = []
 
-    for i = 1:nwinners
-        winner =
-            tournamentgroup[argmax([fitness(x, inputs, outputs) for x in tournamentgroup])]
-        push!(winners, winner)
-        tournamentgroup = tournamentgroup[tournamentgroup.!=winner]
+    while length(winners) < n
+        randindex = rand(1:length(population))
+
+        if rand() < probabilities[randindex]
+            push!(winners, population[randindex])
+        end
     end
 
     winners
@@ -177,12 +185,24 @@ end
 function parsefunction(func)
     if func == "elitist"
         return elitist
-    elseif func == "tournament"
-        return tournamentselection
+    elseif func == "roulette"
+        return rouletteselection
     elseif func == "crossover"
         return GT.crossover
+    elseif func == "2crossover"
+        return GT.k2crossover
+    elseif func == "3crossover"
+        return GT.k3crossover
+    elseif func == "4crossover"
+        return GT.k4crossover
     elseif func == "mutate"
         return GT.mutate
+    elseif func == "2mutate"
+        return GT.k2mutate
+    elseif func == "3mutate"
+        return GT.k3mutate
+    elseif func == "4mutate"
+        return GT.k4mutate
     elseif func == "l2"
         return GT.L2fitness
     elseif func == "errorfitness"

@@ -279,17 +279,59 @@ function crossover(
     child
 end
 
+function k2crossover(parent1, parent2)
+    kcrossover(parent1, parent2, 2)
+end
+
+function k3crossover(parent1, parent2)
+    kcrossover(parent1, parent2, 3)
+end
+    
+function k4crossover(parent1, parent2)
+    kcrossover(parent1, parent2, 4)
+end
+
+function kcrossover(parent1, parent2, k)
+    child = copy(parent1)
+
+    for _ = 1:k
+       child = crossover(child, parent2)
+    end
+
+    child
+end
+
 """
 > Mutation Functions
 """
 
 # Returns a copy of the GTree with a mutation at a point. 
 function mutate(node, funcset, termset)
-    mutation = randexpr(funcset, termset, rand(1:2), 2)
+    mutation = randexpr(funcset, termset, rand(1:2), 1)
 
     mutationpoint = rand(0:nnodes(node)-1)
 
     set(node, mutationpoint, mutation)
+end
+
+function k2mutate(node, funcset, termset)
+    kmutate(node, funcset, termset, 2)
+end
+
+function k3mutate(node, funcset, termset)
+    kmutate(node, funcset, termset, 3)
+end
+
+function k4mutate(node, funcset, termset)
+    kmutate(node, funcset, termset, 4)
+end
+
+function kmutate(node, funcset, termset, k)
+    for _ = 1:k
+        node = mutate(node, funcset, termset)
+    end
+
+    node
 end
 
 """
