@@ -1,0 +1,25 @@
+{
+    "input": "/kepler/kepler1618-input.csv",
+    "output": "/kepler/kepler1618-output.csv",
+    "generations": 10,
+    "population-size": 500,
+    "mutation-prob": 0.1,
+    "parents-selected": 0.5,
+    "function-set": ["^2", "^3", "1/x", "+", "-", "*", "/"],
+    "constant-set": [
+    ],
+    "parameter-set": [
+        {
+            "symbol": "R",
+            "index": 1
+        },
+        {
+            "symbol": "T",
+            "index": 2
+        }
+    ],
+    "fitness-function": "errorfitness",
+    "crossover-function": "crossover",
+    "mutation-function": "mutate",
+    "selection-function": "elitist"
+}

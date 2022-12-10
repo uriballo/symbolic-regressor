@@ -1,0 +1,29 @@
+{
+    "input": "/sin-nosin/sine-input.csv",
+    "output": "/sin-nosin/sine-output.csv",
+    "generations": 10,
+    "population-size": 500,
+    "mutation-prob": 0.1,
+    "parents-selected": 0.5,
+    "function-set": ["^2", "^3", "1/x", "+", "-", "*", "/", "cos", "tan", "sqrt"],
+    "constant-set": [
+        {
+            "symbol": "π",
+            "value": 3.141592653589793
+        },
+        {
+            "symbol": "1",
+            "value": 1
+        }
+    ],
+    "parameter-set": [
+        {
+            "symbol": "θ",
+            "index": 1
+        }
+    ],
+    "fitness-function": "errorfitness",
+    "crossover-function": "crossover",
+    "mutation-function": "mutate",
+    "selection-function": "elitist"
+}

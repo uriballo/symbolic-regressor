@@ -1,0 +1,33 @@
+{
+    "input": "/newton/newton-input.csv",
+    "output": "/newton/newton-output.csv",
+    "generations": 50,
+    "population-size": 500,
+    "mutation-prob": 0.2,
+    "parents-selected": 0.5,
+    "function-set": ["^2", "1/x", "*", "/"],
+    "constant-set": [
+        {
+            "symbol": "𝐆",
+            "value": 6.67408e-11
+        }
+    ],
+    "parameter-set": [
+        {
+            "symbol": "m₁",
+            "index": 1
+        },
+        {
+            "symbol": "m₂",
+            "index": 2
+        },
+        {
+            "symbol": "r",
+            "index": 3
+        }
+    ],
+    "fitness-function": "errorfitness",
+    "crossover-function": "crossover",
+    "mutation-function": "mutate",
+    "selection-function": "elitist"
+}

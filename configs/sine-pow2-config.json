@@ -1,0 +1,29 @@
+{
+    "input": "/sin-pow2/sin-pow2-input.csv",
+    "output": "/sin-pow2/sin-pow2-output.csv",
+    "generations": 50,
+    "population-size": 500,
+    "mutation-prob": 0.2,
+    "parents-selected": 0.5,
+    "function-set": ["^2", "cos", "+"],
+    "constant-set": [
+        {
+            "symbol": "1",
+            "value": 1
+        },
+        {
+            "symbol": "π",
+            "value": 3.141592653589
+        }
+    ],
+    "parameter-set": [
+        {
+            "symbol": "θ",
+            "index": 1
+        }
+    ],
+    "fitness-function": "errorfitness",
+    "crossover-function": "crossover",
+    "mutation-function": "mutate",
+    "selection-function": "elitist"
+}

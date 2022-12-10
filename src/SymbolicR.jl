@@ -1,4 +1,5 @@
 include("GTPopulation.jl")
+using JSON
 
 import .GTPopulation as GP
 
@@ -11,42 +12,45 @@ Parameters by A Field Guide to Genetic Programming
 """
 
 struct SRRUN
-    conf::String
-    inputs::String
-    outputs::String
-    gens::Int
+    input::String
+    output::String
+
+    generations::Int64
+    populationsize::Int64
+
+    mutationprob::Float64
+    parentsselected::Float64
+
+    functionset::Array{String,1}
+    terminalset::Array{Tuple{String, Number},1}
+    parameterset::Array{Tuple{String, Int64},1}
+
     fitnessfunc::String
     crossoverfunc::String
     mutationfunc::String
-
-    mutationprob::Float32
-    nparents::Int
-    popsize::Int
-    time::Bool
+    selectionfunc::String
 end
 
-function initrun(srrun)
-    iters = srrun.gens
 
-    usedefault = srrun.conf != "none"
+function initrun(srrun)
+    iters = srrun.generations
 
     population = GP.genpopconfig(
-        srrun.conf,
-        srrun.inputs,
-        srrun.outputs,
+        srrun.input,
+        srrun.output,
+        srrun.populationsize,
+        srrun.mutationprob,
+        srrun.parentsselected,
+        srrun.functionset,
+        srrun.terminalset,
+        srrun.parameterset,
         srrun.fitnessfunc,
         srrun.crossoverfunc,
         srrun.mutationfunc,
-        srrun.mutationprob,
-        srrun.nparents,
-        srrun.popsize,
-        usedefault,
+        srrun.selectionfunc
     )
-    if srrun.time
-        @time begin
-            GP.evolve(population, iters, true)
-        end
-    else
+
+    @time begin
         GP.evolve(population, iters, true)
     end
 end
@@ -58,111 +62,103 @@ function help()
     println("Usage: SymbolicR.jl [OPTIONS]")
     println("Options:")
     println("\t--help,        -h\tPrint this help message")
-    println("\t--config,      -c\tSpecify a sample configuration to use")
-    println("\t\t\t\t\t* kepler > kepler's third law config")
-    println("\t\t\t\t\t* trig   > sin(θ) config")
-    println("\t--input,       -i\tSpecify the input matrix csv file")
-    println("\t\t\t\t\t* csv must be in /data")
-    println("\t--output,      -o\tSpecify the output vector csv file")
-    println("\t\t\t\t\t* csv must be in /data")
-    println("\t--generations, -g\tSpecify the number of generations to run")
-    println("\t--fitness,     -f\tSpecify the fitness function to use")
-    println("\t\t\t\t\t* l2    > L2 distance")
-    println(
-        "\t\t\t\t\t* cosim > inverse cosine similarity (multiplied by -1 so the closer to -1)",
-    )
-    println("\t--selection,   -s\tSpecify the selection function to use")
-    println("\t\t\t\t\t* NOT AVAILABLE YET, ONLY ONE FUNC IMPLEMENTED")
-    println("\t--crossover,   -x\tSpecify the crossover function to use")
-    println("\t\t\t\t\t* NOT AVAILABLE YET, ONLY ONE FUNC IMPLEMENTED")
-    println("\t--mutation,    -m\tSpecify the mutation function to use")
-    println("\t\t\t\t\t* NOT AVAILABLE YET, ONLY ONE FUNC IMPLEMENTED")
-    println("\t--mprob,       -p\tSpecify the mutation probability")
-    println("\t\t\t\t\t* ∈ [0, 1]")
-    println("\t--popsize,     -ps\tSpecify the population size")
-    println("\t--nparents,    -np\tSpecify the number of parents to use")
-    println("\t\t\t\t\t* ∈ (0, population size]")
-    println("\t--funcset,     -fs\tSpecify the function set to use")
-    println("\t\t\t\t\t* NOT AVAILABLE YET, uses kepler's set")
-    println("\t--termset,     -ts\tSpecify the terminal set to use")
-    println("\t\t\t\t\t* NOT AVAILABLE YET, uses kepler's set")
-    println("\t-t,               \tMeasure time spent running the evolution loop")
-    println("\t\t\t\t\t* ignores time spent reading the files and initializing population")
+    println("\t--config,      -c\tSpecify the config file to use")
+    println("\t\t\t\t\t* e.g. kepler-config.json > /config/kepler-config.json")
+    println("\n[?] Do you want to see the JSON structure for the config file? (y/n)")
+    s = readline()
+    if s == "y"
+        println(
+            "----------------------------------------------------------------------------------------",
+        )
+        println("JSON Structure:")
+        println("\t{")
+        println("\t\t\"input\": \"file_in_config_folder.csv\",")
+        println("\t\t\"output\": \"file_in_config_folder.csv\",")
+        println("\t\t\"generations\": INT,")
+        println("\t\t\"population-size\": INT,")
+        println("\t\t\"mutation-prob:\": FLOAT,")
+        println("\t\t\"parents-selected\": FLOAT,")
+        println("\t\t\"function-set\": [\"^x\", \"1/x\", \"sin\", ...],")
+        println("\t\t\"constant-set\": [")
+        println("\t\t\t{")
+        println("\t\t\t\t\"symbol\": \"constant_symbol\",")
+        println("\t\t\t\t\"value\": FLOAT or INT")
+        println("\t\t\t},")
+        println("\t\t\t{")
+        println("\t\t\t\t\"symbol\": \"constant_symbol\",")
+        println("\t\t\t\t\"value\": FLOAT or INT")
+        println("\t\t\t},")
+        println("\t\t\t...")
+        println("\t\t],")
+        println("\t\t\"parameter-set\": [")
+        println("\t\t\t{")
+        println("\t\t\t\t\"symbol\": \"parameter_symbol\",")
+        println("\t\t\t\t\"index\": INT")
+        println("\t\t\t},")
+        println("\t\t\t{")
+        println("\t\t\t\t\"symbol\": \"parameter_symbol\",")
+        println("\t\t\t\t\"index\": INT")
+        println("\t\t\t},")
+        println("\t\t\t...")
+        println("\t\t],")
+        println("\t\t\"fitness-function\": \"function_name (must be in GTPopulation.jl)\",")
+        println(
+            "\t\t\"crossover-function\": \"function_name (must be in GTPopulation.jl)\",",
+        )
+        println("\t\t\"mutation-function\": \"function_name (must be in GTPopulation.jl)\"")
+        println(
+            "\t\t\"selection-function\": \"function_name (must be in GTPopulation.jl)\"",
+        )
+        println("\t}")
+    end
     println(
         "----------------------------------------------------------------------------------------",
     )
+
 end
 
 function main()
-    configuration = inputmat = outputvec = generations = fitness = nothing
-    crossover = mutation = mutationprob = nparents = popsize = nothing
-
-    configuration = "none"
-    inputmat = "kepler1618-inputs.csv"
-    outputvec = "kepler1618-outputs.csv"
-    generations = 10
-    fitness = "l2"
-    crossover = "crossover"
-    mutation = "mutation"
-    mutationprob = 0.15
-    nparents = 250
-    popsize = 500
-    time = "-t" ∈ ARGS
-
     if "--help" ∈ ARGS || "-h" ∈ ARGS
         help()
     else
+        configpath = "kepler-config.json"
         for arg in ARGS
             sparg = split(arg, "=")
             prefix = sparg[1]
 
             if prefix == "--config" || prefix == "-c"
-                configuration = sparg[2]
-            elseif prefix == "--inputs" || prefix == "-i"
-                inputmat = sparg[2]
-            elseif prefix == "--outputs" || prefix == "-o"
-                outputvec = sparg[2]
-            elseif prefix == "--generations" || prefix == "-g"
-                generations = parse(Int, sparg[2])
-            elseif prefix == "--fitness" || prefix == "-f"
-                fitness = sparg[2]
-            elseif prefix == "--crossover" || prefix == "-x"
-                crossover = sparg[2]
-            elseif prefix == "--mutation" || prefix == "-m"
-                mutation = sparg[2]
-            elseif prefix == "--mprob" || prefix == "-p"
-                mutationprob = parse(Float32, sparg[2])
-            elseif prefix == "--nparents" || prefix == "-np"
-                nparents = parse(Int, sparg[2])
-            elseif prefix == "--popsize" || prefix == "-ps"
-                popsize = parse(Int, sparg[2])
-            elseif prefix != "-t"
-                println("[!] Invalid argument: $arg")
-                println("\t\t it will be ignored.")
-                println("\t\t use -h or --help for help")
+                configpath = sparg[2]
             end
         end
 
-        if nparents > popsize
-            nparents = 0.5 * popsize
-        end
+        config = JSON.parsefile("../configs/" * configpath)
 
+        constantsJSON = config["constant-set"]
+        parametersJSON = config["parameter-set"]
+
+        constants = [(constantsJSON[i]["symbol"], constantsJSON[i]["value"]) for i in eachindex(constantsJSON)]
+        parameters = [(parametersJSON[i]["symbol"], parametersJSON[i]["index"]) for i in eachindex(parametersJSON)]
+
+        
         run = SRRUN(
-            configuration,
-            inputmat,
-            outputvec,
-            generations,
-            fitness,
-            crossover,
-            mutation,
-            mutationprob,
-            nparents,
-            popsize,
-            time,
+            config["input"],
+            config["output"],
+            config["generations"],
+            config["population-size"],
+            config["mutation-prob"],
+            config["parents-selected"],
+            config["function-set"],
+            constants,
+            parameters,
+            config["fitness-function"],
+            config["crossover-function"],
+            config["mutation-function"],
+            config["selection-function"],
         )
+        
+
         initrun(run)
     end
 end
-
 
 main()

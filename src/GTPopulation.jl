@@ -4,6 +4,7 @@ using CSV
 using DataFrames
 
 include("GTree.jl")
+include("Utils.jl")
 
 import .GTrees as GT
 
@@ -20,19 +21,19 @@ struct Config
 
     inputs::Matrix{Float64}  # Input data.
     outputs::Vector{Float64} # Output data.
-    nparents::Int64          # Number of parents selected per generation.
+    nparents::Float64          # Number of parents selected per generation.
 end
 
-mutable struct Population
+mutable struct Context
     population::Array{GT.GTree,1} # Array of GTrees.
-    context::Config               # Configuration of the population.
+    config::Config               # Configuration of the population.
 end
 
 """
 > Base Methods for Population
 """
 
-function Base.show(io::IO, pop::Population)
+function Base.show(io::IO, pop::Context)
     println(io, "###############################")
     println(io, "# Population Size: ", length(pop.population))
     for i = 1:length(pop.population)
@@ -44,27 +45,34 @@ end
 > Population Methods
 """
 
-# TBD
-function roulette(population, n)
-    winners = []
-    inputs = population.context.inputs
-    outputs = population.context.outputs
-    pop = population.population
+# Implements the tournament selection function.
+function tournamentselection(context, pop, tournamentsize, nwinners)
+    inputs = context.inputs
+    outputs = context.outputs
+    fitness = context.fitness
 
-    fitnesses = [population.context.fitness(x, inputs, outputs) for x in pop]
-    probabilities = fitnesses ./ sum(fitnesses)
-    # TODO: finish
+    tournamentgroup = rand(pop, tournamentsize)
+    winners = []
+
+    for i = 1:nwinners
+        winner =
+            tournamentgroup[argmax([fitness(x, inputs, outputs) for x in tournamentgroup])]
+        push!(winners, winner)
+        tournamentgroup = tournamentgroup[tournamentgroup.!=winner]
+    end
+
+    winners
 end
 
 # Returns an array of size n with the n best GTrees from the population.
 #   - uses the fitness function from the population context as a metric.
-function elitist(population, n)
-    inputs = population.context.inputs
-    outputs = population.context.outputs
-    pop = population.population
-    ctx = population.context
+function elitist(context, n)
+    inputs      = context.config.inputs
+    outputs     = context.config.outputs
+    population  = context.population
+    fitness     = context.config.fitness
 
-    sorted = sort(pop, by = x -> ctx.fitness(x, inputs, outputs), rev = false)
+    sorted = sort(population, by = x -> fitness(x, inputs, outputs), rev = false)
     sorted[1:n]
 end
 
@@ -85,138 +93,144 @@ function loadoutputs(filename)
 end
 
 # Evolves the population over the number of specified generations.
-function evolve(population, generations, verbose = false)
-    ctx = population.context
-    pop = population.population
+function evolve(context, generations, verbose = false)
+    config     = context.config
+
+    nparents  = config.nparents
+    fitness   = config.fitness
+    inputs    = config.inputs
+    outputs   = config.outputs
+    crossover = config.crossover
+    mutate    = config.mutate
+    funcset   = config.funcset
+    termset   = config.termset
+    select    = config.selection
+    mutationprob = config.mutationprob
 
     for i = 1:generations
-        parents = elitist(population, ctx.nparents)
+        parents = select(context, trunc(Int, nparents * length(context.population)))
 
         if verbose
             println("#############################")
             println("# Generation $i")
             println("Best Candidate: $(parents[1])")
-            println("\tFitness: $(ctx.fitness(parents[1], ctx.inputs, ctx.outputs))")
+            println("\tFitness: $(fitness(parents[1], inputs, outputs))")
         end
 
         children = []
         for parent in parents
             secondparent = parents[rand(1:length(parents))]
-            child = ctx.crossover(parent, secondparent)
-            if rand() < ctx.mutationprob
-                child = ctx.mutate(child, ctx.funcset, ctx.termset)
+            child = crossover(parent, secondparent)
+            if rand() < mutationprob
+                child = mutate(child, funcset, termset)
             end
+
             push!(children, child)
         end
 
-        population.population = vcat(parents, children)
+        context.population = vcat(parents, children)
     end
 
-    final = elitist(population, 1)[1]
+    final = select(context, 1)[1]
     println("\n\n#############################")
     println("# Final Generation")
     println("Best Candidate: $(final)")
-    println("\tFitness: $(ctx.fitness(final, ctx.inputs, ctx.outputs))")
+    println("\tFitness: $(fitness(final, inputs, outputs))")
 end
 
 """
 > Sample Configs
 """
 
-function genpopconfig(
-    defaultconfig,
-    inputs,
-    outputs,
-    fitness,
-    crossover,
-    mutation,
-    mutationprob,
-    nparents,
-    popsize,
-    usedefault = false,
-)
-    if usedefault
-        conf = defaultconfig == "trig" ? trigConfig : sampleConfig
-    else
-        fitnessfunc = fitness == "l2" ? GT.L2fitness : GT.cosinesim
-        conf = Config(
-            fitnessfunc,
-            GT.crossover,
-            GT.mutate,
-            elitist,
-            mutationprob,
-            TermSet,
-            FuncSet,
-            loadinputs(inputs),
-            loadoutputs(outputs),
-            nparents,
-        )
+function parsefunctionset(funcset)
+    funcs = []
+
+    for func in funcset
+        f = strtofunc(func)
+        if f[3]== 1
+            push!(funcs, GT.GTUnaryNode(f[1], f[2]))
+        else
+            push!(funcs, GT.GTBinaryNode(f[1], f[2]))
+        end
     end
-    Population(GT.halfandhalf(popsize, conf.funcset, conf.termset, 2, 6), conf)
+
+    funcs
 end
 
-FuncSet = [
-    GT.GTUnaryNode(x -> x^2, "²"),
-    GT.GTUnaryNode(x -> x^3, "³"),
-    GT.GTUnaryNode(x -> 1 / x, "⁻¹"),
-    GT.GTBinaryNode(+, "+"),
-    GT.GTBinaryNode(-, "-"),
-    GT.GTBinaryNode(*, "×"),
-    GT.GTBinaryNode(/, "÷"),
-]
+function parseterminalset(termset, parameterset)
+    terms = []
 
-TermSet = [GT.GTParameter(1, "R"), GT.GTParameter(2, "T")]
+    for term in termset
+        push!(terms, GT.GTConstant(term[2], term[1]))
+    end
 
-TrigFuncSet = [
-    #GT.GTUnaryNode(sin, "sin"),
-    GT.GTUnaryNode(cos, "cos"),
-    GT.GTUnaryNode(tan, "tan"),
-    GT.GTUnaryNode(x -> x^2, "²"),
-    #GT.GTUnaryNode(x -> x^3, "³"),
-    #GT.GTUnaryNode(x -> 1/x, "⁻¹"),
-    GT.GTBinaryNode(+, "+"),
-    GT.GTBinaryNode(-, "-"),
-    GT.GTBinaryNode(*, "×"),
-    GT.GTBinaryNode(/, "÷"),
-    GT.GTUnaryNode(x -> sqrt(abs(x)), "√"),
-]
+    for param in parameterset
+        push!(terms, GT.GTParameter(param[2], param[1]))
+    end
 
-TrigTermSet = [GT.GTParameter(1, "θ"), GT.GTConstant(π, "π"), GT.GTConstant(1, "1")]
+    terms
+end
 
-trigConfig = Config(
-    GT.L2fitness,
-    GT.crossover,
-    GT.mutate,
-    elitist,
-    0.15,
-    TrigTermSet,
-    TrigFuncSet,
-    loadinputs("sine-inputs.csv"),
-    loadoutputs("sine-outputs.csv"),
-    250,
+function parsefunction(func)
+    if func == "elitist"
+        return elitist
+    elseif func == "tournament"
+        return tournamentselection
+    elseif func == "crossover"
+        return GT.crossover
+    elseif func == "mutate"
+        return GT.mutate
+    elseif func == "l2"
+        return GT.L2fitness
+    elseif func == "errorfitness"
+        return GT.errorfitness
+    elseif func == "cosinesim"
+        return GT.cosinesim
+    else
+        println("Invalid function: $func")
+        return nothing
+    end
+end
+
+function genpopconfig(
+    input,
+    output,
+    populationsize,
+    mutationprob,
+    parentsselected,
+    functionset,
+    terminalset,
+    parameterset,
+    fitnessfunc,
+    crossoverfunc,
+    mutationfunc,
+    selectionfunc
 )
+    inputs = loadinputs(input)
+    outputs = loadoutputs(output)
+    funcset = parsefunctionset(functionset)
+    termset = parseterminalset(terminalset, parameterset)
+    fitfunc = parsefunction(fitnessfunc)
+    crossfunc = parsefunction(crossoverfunc)
+    mutfunc = parsefunction(mutationfunc)
+    selectfunc = parsefunction(selectionfunc)
 
-sampleConfig = Config(
-    GT.L2fitness,
-    GT.crossover,
-    GT.mutate,
-    elitist,
-    0.15,
-    TermSet,
-    FuncSet,
-    loadinputs("kepler1618-inputs.csv"),
-    loadoutputs("kepler1618-outputs.csv"),
-    250,
-)
+    initialpop = GT.genpopulation(populationsize, funcset, termset, 1, 3)
 
-samplePop = Population(
-    GT.halfandhalf(500, sampleConfig.funcset, sampleConfig.termset, 2, 6),
-    sampleConfig,
-)
+    config = Config(
+        fitfunc,
+        crossfunc,
+        mutfunc,
+        selectfunc,
+        mutationprob,
+        termset,
+        funcset,
+        inputs,
+        outputs,
+        parentsselected,
+    )
 
-trigPop = Population(
-    GT.halfandhalf(500, trigConfig.funcset, trigConfig.termset, 1, 4),
-    trigConfig,
-)
+    Context(initialpop, config)
+end
 
 end

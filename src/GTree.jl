@@ -243,8 +243,38 @@ end
 
 # Returns the one-point crossover of two GTrees.
 function crossover(parent1, parent2)
-    gene1 = get(parent1, rand(0:nnodes(parent1)-1))
-    child = set(parent2, rand(0:nnodes(parent2)-1), gene1)
+    crossover(parent2, parent1)
+end
+
+function crossover(parent1::GTLeaf, parent2::GTLeaf)
+    rand() < 0.5 ? parent1 : parent2
+end
+
+function crossover(parent1::GTLeaf, parent2::GTUnaryNode)
+    gene = copy(parent1)
+    child = set(parent2, rand(0:nnodes(parent2)-1), gene)
+
+    child
+end
+
+function crossover(parent1::GTLeaf, parent2::GTBinaryNode)
+    gene = copy(parent1)
+    child = set(parent2, rand(0:nnodes(parent2)-1), gene)
+
+    child
+end
+
+function crossover(
+    parent1::Union{GTUnaryNode,GTBinaryNode},
+    parent2::Union{GTUnaryNode,GTBinaryNode},
+)
+    if rand() < 0.5
+        gene = get(parent1, rand(0:nnodes(parent1)-1))
+        child = set(parent2, rand(0:nnodes(parent2)-1), gene)
+    else
+        gene = get(parent2, rand(0:nnodes(parent2)-1))
+        child = set(parent1, rand(0:nnodes(parent1)-1), gene)
+    end
 
     child
 end
@@ -287,6 +317,17 @@ function halfandhalf(size, funcset, termset, minsize, maxsize)
     population
 end
 
+function genpopulation(size, funcset, termset, minsize, maxsize)
+    population = []
+
+    for _ = 1:size
+        push!(population, randexpr(funcset, termset, rand(minsize:maxsize), rand(1:2)))
+    end
+
+    population
+end
+
+
 """
 > Fitness Functions
 """
@@ -295,6 +336,12 @@ end
 function pnorm(v, p)
     absv = abs.(v)
     sum((absv) .^ p)^(1 / p)
+end
+
+function errorfitness(node, inputs, outputs)
+    predictions = [eval(node, x) for x in eachcol(inputs)]
+
+    sum((predictions .- outputs) .^ 2)
 end
 
 # Returns the fitness of a GTree using the L2 metric.
@@ -322,15 +369,6 @@ function cosinesim(node, inputs, outputs)
 
     sim = sum(predictions .* outputs) / (predictionnorm * outputnorm)
     isnan(sim) || isinf(sim) ? 999 : -sim
-end
-
-# Returns the inverse mean square error of a GTree.
-#   - inputs is a matrix where each column is an input vector.
-#   - outputs is a vector with the output corresponding to each input vector.
-function mse(node, inputs, outputs)
-    predictions = [eval(node, x) for x in eachcol(inputs)]
-
-    1 / sqrt(sum((predictions .- outputs) .^ 2))
 end
 
 end
