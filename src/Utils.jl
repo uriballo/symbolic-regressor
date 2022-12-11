@@ -38,22 +38,30 @@ function isprefixoperator(string)
     return true
 end
 
-function convertunicode(string)
-    string = replace(string, 
-        "²" => "^2",
-        "³" => "^3",
-        "⁻¹" => "^-1",
-        "×" => "*",
-        "÷" => "/",
-        "√" => "sqrt")
+function normalizeunicode(string)
+    string = replace(string,
+    "²" => "^2",
+    "³" => "^3",
+    "⁻¹" => "^-1",
+    "×" => "*",
+    "÷" => "/",
+    "√" => "sqrt",
+    "π" => "", # since it already has a numerical value by defect we remove it from "symbols that need trasnlation".
+    "𝐺" => "G")
 end
 
 function simplifycmd(expr, symbols)
-    syms = join(symbols, " ")
-    commandstring = "julia -e 'using SymbolicUtils; @syms " *  syms *"; println(simplify( " * convertunicode(expr)*  " ))'"
+    syms = normalizeunicode(join(symbols, " "))
+
+    commandstring = "julia -e 'using SymbolicUtils; @syms " * syms *"; println(\"\\n[~] \", simplify( " * normalizeunicode(expr)*  " ))'"
 
     println("[!] Run the following command on a terminal to simplify the expression:")
-    println("\t> " * commandstring)
-    #remove π and put it back in?
-    return commandstring
+    println("\n[>] " * commandstring)
+    println()
+end
+
+# Returns the p-norm of a vector v.
+function pnorm(v, p)
+    absv = abs.(v)
+    sum((absv) .^ p)^(1 / p)
 end

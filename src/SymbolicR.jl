@@ -3,14 +3,6 @@ using JSON
 
 import .GTPopulation as GP
 
-"""
-Parameters by A Field Guide to Genetic Programming
-    population size (should be at least 500)
-    probability of mutation
-    > (half-and-half) range 2-6 is optimal
-    number of generations betweem 10 and 50
-"""
-
 struct SRRUN
     input::String
     output::String

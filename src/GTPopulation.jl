@@ -2,7 +2,6 @@ module GTPopulation
 
 using CSV
 using DataFrames
-using StatsBase
 
 include("GTree.jl")
 include("Utils.jl")
@@ -124,7 +123,8 @@ function evolve(context, generations, verbose = false)
             println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
     println()
-    simplifycmd(GT.toString(final), GT.symbolsExpr(final))
+    simplifycmd(GT.toString(final), GT.exprsyms(final))
+println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 end
 
 """
@@ -235,4 +235,3 @@ function genpopconfig(
 end
 
 end
-'

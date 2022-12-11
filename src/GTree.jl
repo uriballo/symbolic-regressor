@@ -46,14 +46,10 @@ end
 > Base Methods for GTree Type
 """
 
+# Prints the expression represented by a GTree using infix notation.
 function Base.show(io::IO, node::GTree)
     stringtree = toString(node)
     print(io, stringtree)
-end
-
-# Prints a binary node symbol and its inputs in prefix notation e.g. ²(x) for x².
-function Base.show(io::IO, node::GTUnaryNode)
-    print(io, node.symbol, "(", node.input, ")")
 end
 
 # Returns a copy of a constant node.
@@ -76,6 +72,12 @@ function Base.copy(node::GTUnaryNode)
     GTUnaryNode(node.func, node.symbol, node.input)
 end
 
+"""
+> GTree Utils Multiple Dispatch
+"""
+
+####################
+# Returns a string representation of a GTree using infix notation.
 function toString(node::GTConstant)
     node.symbol
 end
@@ -96,18 +98,16 @@ function toString(node::GTUnaryNode)
     end
 end
 
-function symbolsExpr(node)
+####################
+# Returns a list of the symbols of a GTree.
+function exprsyms(node)
     symbolsstring = getSymbols(node)
 
     unique(split(symbolsstring))
 end
 
 function getSymbols(node::GTLeaf)
-    if node.symbol ∈ ["1", "2", "3", "4", "5", "6", "7", "8", "9", "π", "e"]
-        ""
-    else
-        node.symbol * " "
-    end
+    node.symbol * " "
 end
 
 function getSymbols(node::GTBinaryNode)
@@ -117,10 +117,6 @@ end
 function getSymbols(node::GTUnaryNode)
     getSymbols(node.input)
 end
-
-"""
-> GTree Utils Multiple Dispatch
-"""
 
 ####################
 # Returns the number of nodes of a GTree.
@@ -246,7 +242,7 @@ end
 """
 
 # Generates a random expression from a given set of functions, terminals, max depth and method.
-# The method can be either "grow" (1) or "full" (2).
+#     - the method can be either "grow" (1) or "full" (2).
 function randexpr(funcset, termset, maxdepth, method)
     tsize = length(termset)
     fsize = length(funcset)
@@ -275,9 +271,11 @@ end
 > Crossover Functions
 """
 
+####################
 # Returns the one-point crossover of two GTrees.
+
 function crossover(parent1, parent2)
-    crossover(parent2, parent1)
+    crossover(parent2, parent1) # crossover is "symmetric".
 end
 
 function crossover(parent1::GTLeaf, parent2::GTLeaf)
@@ -300,7 +298,7 @@ end
 
 function crossover(
     parent1::Union{GTUnaryNode,GTBinaryNode},
-    parent2::Union{GTUnaryNode,GTBinaryNode},
+    parent2::Union{GTUnaryNode,GTBinaryNode}, # Union since the operation is the same for any combination of the arg types
 )
     if rand() < 0.5
         gene = get(parent1, rand(0:nnodes(parent1)-1))
@@ -313,6 +311,7 @@ function crossover(
     child
 end
 
+# Applies the crossover function k-times.
 function k2crossover(parent1, parent2)
     kcrossover(parent1, parent2, 2)
 end
@@ -339,7 +338,8 @@ end
 > Mutation Functions
 """
 
-# Returns a copy of the GTree with a mutation at a point. 
+####################
+# Returns a mutatied GTree.
 function mutate(node, funcset, termset)
     mutation = randexpr(funcset, termset, rand(1:2), 1)
 
@@ -348,6 +348,7 @@ function mutate(node, funcset, termset)
     set(node, mutationpoint, mutation)
 end
 
+# Applies the mutation function k-times.
 function k2mutate(node, funcset, termset)
     kmutate(node, funcset, termset, 2)
 end
@@ -393,6 +394,8 @@ function halfandhalf(size, funcset, termset, minsize, maxsize)
     population
 end
 
+# Reurns an array of random GTrees.
+#   - unlike halfandhalf, the method is chosen randomly for each tree.
 function genpopulation(size, funcset, termset, minsize, maxsize)
     population = []
 
@@ -403,17 +406,15 @@ function genpopulation(size, funcset, termset, minsize, maxsize)
     population
 end
 
-
 """
 > Fitness Functions
 """
 
-# Returns the p-norm of a vector v.
-function pnorm(v, p)
-    absv = abs.(v)
-    sum((absv) .^ p)^(1 / p)
-end
-
+# Returns the fitness of a GTree using the squared sum of errors.
+#   - in theory more efficient than L2fitness due to the lack of sqrt and norms that are not really relevant for the fitness.
+#   - it has a small penalization factor for complex expressions i.e. it favours simpler ones.
+#   - inputs is a matrix where each column is an input vector.
+#   - outputs is a vector with the output corresponding to each input vector.
 function errorfitness(node, inputs, outputs)
     predictions = [eval(node, x) for x in eachcol(inputs)]
 
@@ -435,7 +436,7 @@ end
 # Returns the cosine similarity between the predicted values of a GTree and outputs.
 #   - inputs is a matrix where each column is an input vector.
 #   - outputs is a vector with the output corresponding to each input vector.
-#   - returns values between -1 and 1, the closer to 1 the better.
+#   - returns values between -1 and 1, the closer to -1 the better (it's inverted to have consistency with the other fitness functions).
 function cosinesim(node, inputs, outputs)
     predictions = [eval(node, x) for x in eachcol(inputs)]
 
