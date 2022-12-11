@@ -106,8 +106,16 @@ function exprsyms(node)
     unique(split(symbolsstring))
 end
 
-function getSymbols(node::GTLeaf)
+function getSymbols(node::GTParameter)
     node.symbol * " "
+end
+
+function getSymbols(node::GTConstant)
+    if node.symbol ∈ ["𝐺", "𝑒", "𝜋"]
+       node.symbol * " " 
+    else
+        ""
+    end
 end
 
 function getSymbols(node::GTBinaryNode)
@@ -319,7 +327,7 @@ end
 function k3crossover(parent1, parent2)
     kcrossover(parent1, parent2, 3)
 end
-    
+
 function k4crossover(parent1, parent2)
     kcrossover(parent1, parent2, 4)
 end
@@ -328,7 +336,7 @@ function kcrossover(parent1, parent2, k)
     child = copy(parent1)
 
     for _ = 1:k
-       child = crossover(child, parent2)
+        child = crossover(child, parent2)
     end
 
     child

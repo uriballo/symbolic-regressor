@@ -1,5 +1,7 @@
 using SymbolicUtils
 
+# Given a function in string format returns the corresponding function.
+#  - limited function support.
 function strtofunc(string)
     if string == "sin"
         return (sin, "sin", 1)
@@ -26,6 +28,23 @@ function strtofunc(string)
     end
 end
 
+# Returns a matrix with the inputs from 'filename'.
+#   - filename must be in the data folder.
+function loadinputs(filename)
+    inputs = CSV.read("../data/" * filename, DataFrame)
+
+    transpose(Matrix(inputs))
+end
+
+# Returns a vector with the outputs from 'filename'.
+#   - filename must be in the data folder.
+function loadoutputs(filename)
+    outputs = CSV.read("../data/" * filename, DataFrame)
+
+    vec(Matrix(outputs))
+end
+
+# Returns whether the string is a prefix operator e.g. sin(...) yes, ^2 not.
 function isprefixoperator(string)
     if string == "²"
         return false
@@ -38,22 +57,29 @@ function isprefixoperator(string)
     return true
 end
 
+# Returns the string with the unicode characters replaced by code-accepted equivalents.
 function normalizeunicode(string)
-    string = replace(string,
-    "²" => "^2",
-    "³" => "^3",
-    "⁻¹" => "^-1",
-    "×" => "*",
-    "÷" => "/",
-    "√" => "sqrt",
-    "π" => "", # since it already has a numerical value by defect we remove it from "symbols that need trasnlation".
-    "𝐺" => "G")
+    string = replace(
+        string,
+        "²" => "^2",
+        "³" => "^3",
+        "⁻¹" => "^-1",
+        "×" => "*",
+        "÷" => "/",
+        "√" => "sqrt",
+    )
 end
 
+# Shows the command to run on a terminal to simplify the expression.
 function simplifycmd(expr, symbols)
-    syms = normalizeunicode(join(symbols, " "))
+    syms = join(symbols, " ")
 
-    commandstring = "julia -e 'using SymbolicUtils; @syms " * syms *"; println(\"\\n[~] \", simplify( " * normalizeunicode(expr)*  " ))'"
+    commandstring =
+        "julia -e 'using SymbolicUtils; @syms " *
+        syms *
+        "; println(\"\\n[~] \", simplify" *
+        normalizeunicode(expr) *
+        ")'"
 
     println("[!] Run the following command on a terminal to simplify the expression:")
     println("\n[>] " * commandstring)

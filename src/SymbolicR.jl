@@ -14,8 +14,8 @@ struct SRRUN
     parentsselected::Float64
 
     functionset::Array{String,1}
-    terminalset::Array{Tuple{String, Number},1}
-    parameterset::Array{Tuple{String, Int64},1}
+    terminalset::Array{Tuple{String,Number},1}
+    parameterset::Array{Tuple{String,Int64},1}
 
     fitnessfunc::String
     crossoverfunc::String
@@ -39,7 +39,7 @@ function initrun(srrun)
         srrun.fitnessfunc,
         srrun.crossoverfunc,
         srrun.mutationfunc,
-        srrun.selectionfunc
+        srrun.selectionfunc,
     )
 
     @time begin
@@ -128,10 +128,16 @@ function main()
         constantsJSON = config["constant-set"]
         parametersJSON = config["parameter-set"]
 
-        constants = [(constantsJSON[i]["symbol"], constantsJSON[i]["value"]) for i in eachindex(constantsJSON)]
-        parameters = [(parametersJSON[i]["symbol"], parametersJSON[i]["index"]) for i in eachindex(parametersJSON)]
+        constants = [
+            (constantsJSON[i]["symbol"], constantsJSON[i]["value"]) for
+            i in eachindex(constantsJSON)
+        ]
+        parameters = [
+            (parametersJSON[i]["symbol"], parametersJSON[i]["index"]) for
+            i in eachindex(parametersJSON)
+        ]
 
-        
+
         run = SRRUN(
             config["input"],
             config["output"],
@@ -147,7 +153,7 @@ function main()
             config["mutation-function"],
             config["selection-function"],
         )
-        
+
 
         initrun(run)
     end

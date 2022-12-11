@@ -48,56 +48,42 @@ end
 # Returns an array of size n with the n best GTrees from the population.
 #   - uses the fitness function from the population context as a metric.
 function elitist(context, n)
-    inputs      = context.config.inputs
-    outputs     = context.config.outputs
-    population  = context.population
-    fitness     = context.config.fitness
+    inputs = context.config.inputs
+    outputs = context.config.outputs
+    population = context.population
+    fitness = context.config.fitness
 
     sorted = sort(population, by = x -> fitness(x, inputs, outputs), rev = false)
     sorted[1:n]
 end
 
-# Retruns a matrix with the inputs from 'filename'.
-#   - filename must be in the data folder.
-function loadinputs(filename)
-    inputs = CSV.read("../data/" * filename, DataFrame)
-
-    transpose(Matrix(inputs))
-end
-
-# Returns a vector with the outputs from 'filename'.
-#   - filename must be in the data folder.
-function loadoutputs(filename)
-    outputs = CSV.read("../data/" * filename, DataFrame)
-
-    vec(Matrix(outputs))
-end
-
-# Evolves the population over the number of specified generations.
+# Evolves the population in context over the number of specified generations.
 function evolve(context, generations, verbose = false)
-    config     = context.config
+    config = context.config
 
-    nparents  = config.nparents
-    fitness   = config.fitness
-    inputs    = config.inputs
-    outputs   = config.outputs
+    nparents = config.nparents
+    fitness = config.fitness
+    inputs = config.inputs
+    outputs = config.outputs
     crossover = config.crossover
-    mutate    = config.mutate
-    funcset   = config.funcset
-    termset   = config.termset
-    select    = config.selection
+    mutate = config.mutate
+    funcset = config.funcset
+    termset = config.termset
+    select = config.selection
     mutationprob = config.mutationprob
 
     for i = 1:generations
         parents = select(context, trunc(Int, nparents * length(context.population)))
 
-        bestfitness =  fitness(parents[1], inputs, outputs)
+        bestfitness = fitness(parents[1], inputs, outputs)
 
         if verbose
-            println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            println(
+                "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+            )
             println("[#] Generation $i")
             println("\t[!] Best Candidate: $(parents[1])")
-            println("\t\t[>] Fitness: $(bestfitness)")
+            println("\t[>] Fitness: $(bestfitness)")
         end
 
         children = []
@@ -116,27 +102,34 @@ function evolve(context, generations, verbose = false)
     end
 
     final = select(context, 1)[1]
-            println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    println(
+        "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+    )
     println("[#] Final Generation")
     println("\t[!] Best Candidate: $final")
-    println("\t\t[>] Fitness: $(fitness(final, inputs, outputs))")
-            println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    println("\t[>] Fitness: $(fitness(final, inputs, outputs))")
+    println(
+        "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+    )
 
     println()
     simplifycmd(GT.toString(final), GT.exprsyms(final))
-println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    println(
+        "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+    )
 end
 
 """
-> Sample Configs
+> Initialization Methods
 """
 
+# Given a functionset of strings returns an array of the corresponding functions.
 function parsefunctionset(funcset)
     funcs = []
 
     for func in funcset
         f = strtofunc(func)
-        if f[3]== 1
+        if f[3] == 1
             push!(funcs, GT.GTUnaryNode(f[1], f[2]))
         else
             push!(funcs, GT.GTBinaryNode(f[1], f[2]))
@@ -146,6 +139,7 @@ function parsefunctionset(funcset)
     funcs
 end
 
+# Given a terminalset of strings and a parameterset of strings returns an array of the corresponding constants and parameters.
 function parseterminalset(termset, parameterset)
     terms = []
 
@@ -160,6 +154,7 @@ function parseterminalset(termset, parameterset)
     terms
 end
 
+# Given a string returns the corresponding function.
 function parsefunction(func)
     if func == "elitist"
         return elitist
@@ -193,6 +188,7 @@ function parsefunction(func)
     end
 end
 
+# Given configuration parameters returns a population context, which contains the population and the configuration.
 function genpopconfig(
     input,
     output,
@@ -205,7 +201,7 @@ function genpopconfig(
     fitnessfunc,
     crossoverfunc,
     mutationfunc,
-    selectionfunc
+    selectionfunc,
 )
     inputs = loadinputs(input)
     outputs = loadoutputs(output)
