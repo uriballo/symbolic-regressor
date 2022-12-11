@@ -77,9 +77,9 @@ function simplifycmd(expr, symbols)
     commandstring =
         "julia -e 'using SymbolicUtils; @syms " *
         syms *
-        "; println(\"\\n[~] \", simplify" *
+        "; println(\"\\n[~] \", simplify(" *
         normalizeunicode(expr) *
-        ")'"
+        "))'"
 
     println("[!] Run the following command on a terminal to simplify the expression:")
     println("\n[>] " * commandstring)
