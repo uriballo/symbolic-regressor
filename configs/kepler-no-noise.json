@@ -1,20 +1,12 @@
 {
     "input": "/kepler/kepler1618-input.csv",
     "output": "/kepler/kepler1618-output.csv",
-    "generations": 50,
+    "generations": 10,
     "population-size": 500,
-    "mutation-prob": 1,
-    "parents-selected": 0.33,
-    "function-set": ["^2", "^3", "1/x", "+", "-", "*", "/", "sqrt"],
+    "mutation-prob": 0.3,
+    "parents-selected": 0.5,
+    "function-set": ["^2", "^3", "1/x", "+", "-", "*", "/"],
     "constant-set": [
-        {
-            "symbol": "π",
-            "value": 3.141592653589793
-        },
-        {
-            "symbol": "1",
-            "value": 1
-        }
     ],
     "parameter-set": [
         {

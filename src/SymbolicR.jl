@@ -121,7 +121,7 @@ function main()
     if "--help" ∈ ARGS || "-h" ∈ ARGS
         help()
     else
-        configpath = "kepler-config.json"
+        configpath = "kepler-no-noise.json"
         for arg in ARGS
             sparg = split(arg, "=")
             prefix = sparg[1]

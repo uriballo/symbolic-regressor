@@ -1,5 +1,7 @@
 module GTrees
 
+include("Utils.jl")
+
 """
 > Genetic Tree Type
 """
@@ -44,19 +46,9 @@ end
 > Base Methods for GTree Type
 """
 
-# Prints a constant node symbol.
-function Base.show(io::IO, node::GTConstant)
-    print(io, node.symbol)
-end
-
-# Prints a parameter node symbol.
-function Base.show(io::IO, node::GTParameter)
-    print(io, node.symbol)
-end
-
-# Prints a unary node symbol and its input in prefix notation e.g. +(2, 2) for 2+2.
-function Base.show(io::IO, node::GTBinaryNode)
-    print(io, node.symbol, "(", node.input[1], ", ", node.input[2], ")")
+function Base.show(io::IO, node::GTree)
+    stringtree = toString(node)
+    print(io, stringtree)
 end
 
 # Prints a binary node symbol and its inputs in prefix notation e.g. ²(x) for x².
@@ -82,6 +74,48 @@ end
 # Returns a copy of a binary node.
 function Base.copy(node::GTUnaryNode)
     GTUnaryNode(node.func, node.symbol, node.input)
+end
+
+function toString(node::GTConstant)
+    node.symbol
+end
+
+function toString(node::GTParameter)
+    node.symbol
+end
+
+function toString(node::GTBinaryNode)
+    "(" * toString(node.input[1]) * " " * node.symbol * " " * toString(node.input[2]) * ")"
+end
+
+function toString(node::GTUnaryNode)
+    if isprefixoperator(node.symbol)
+        node.symbol * "(" * toString(node.input) * ")"
+    else
+        "(" * toString(node.input) * ")" * node.symbol
+    end
+end
+
+function symbolsExpr(node)
+    symbolsstring = getSymbols(node)
+
+    unique(split(symbolsstring))
+end
+
+function getSymbols(node::GTLeaf)
+    if node.symbol ∈ ["1", "2", "3", "4", "5", "6", "7", "8", "9", "π", "e"]
+        ""
+    else
+        node.symbol * " "
+    end
+end
+
+function getSymbols(node::GTBinaryNode)
+    getSymbols(node.input[1]) * getSymbols(node.input[2])
+end
+
+function getSymbols(node::GTUnaryNode)
+    getSymbols(node.input)
 end
 
 """
@@ -383,7 +417,7 @@ end
 function errorfitness(node, inputs, outputs)
     predictions = [eval(node, x) for x in eachcol(inputs)]
 
-    sum((predictions .- outputs) .^ 2)
+    sum((predictions .- outputs) .^ 2) + depth(node) * 7e-20
 end
 
 # Returns the fitness of a GTree using the L2 metric.

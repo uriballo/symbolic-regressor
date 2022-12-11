@@ -1,3 +1,5 @@
+using SymbolicUtils
+
 function strtofunc(string)
     if string == "sin"
         return (sin, "sin", 1)
@@ -22,4 +24,36 @@ function strtofunc(string)
     elseif string == "sqrt"
         return (x -> sqrt(abs(x)), "√", 1)
     end
+end
+
+function isprefixoperator(string)
+    if string == "²"
+        return false
+    elseif string == "³"
+        return false
+    elseif string == "⁻¹"
+        return false
+    end
+
+    return true
+end
+
+function convertunicode(string)
+    string = replace(string, 
+        "²" => "^2",
+        "³" => "^3",
+        "⁻¹" => "^-1",
+        "×" => "*",
+        "÷" => "/",
+        "√" => "sqrt")
+end
+
+function simplifycmd(expr, symbols)
+    syms = join(symbols, " ")
+    commandstring = "julia -e 'using SymbolicUtils; @syms " *  syms *"; println(simplify( " * convertunicode(expr)*  " ))'"
+
+    println("[!] Run the following command on a terminal to simplify the expression:")
+    println("\t> " * commandstring)
+    #remove π and put it back in?
+    return commandstring
 end

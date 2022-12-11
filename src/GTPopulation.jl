@@ -46,32 +46,6 @@ end
 > Population Methods
 """
 
-# Implements the tournament selection function.
-function rouletteselection(context, n) # TODO FIX!!
-    inputs      = context.config.inputs
-    outputs     = context.config.outputs
-    population  = context.population
-    fitness     = context.config.fitness
-
-    fitnesses = [fitness(x, inputs, outputs) for x in population]
-
-    totalfitness = sum(fitnesses)
-
-    probabilities = [f / totalfitness for f in fitnesses]
-
-    winners = []
-
-    while length(winners) < n
-        randindex = rand(1:length(population))
-
-        if rand() < probabilities[randindex]
-            push!(winners, population[randindex])
-        end
-    end
-
-    winners
-end
-
 # Returns an array of size n with the n best GTrees from the population.
 #   - uses the fitness function from the population context as a metric.
 function elitist(context, n)
@@ -121,10 +95,10 @@ function evolve(context, generations, verbose = false)
         bestfitness =  fitness(parents[1], inputs, outputs)
 
         if verbose
-            println("#############################")
-            println("# Generation $i")
-            println("Best Candidate: $(parents[1])")
-            println("\tFitness: $(bestfitness)")
+            println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            println("[#] Generation $i")
+            println("\t[!] Best Candidate: $(parents[1])")
+            println("\t\t[>] Fitness: $(bestfitness)")
         end
 
         children = []
@@ -143,10 +117,14 @@ function evolve(context, generations, verbose = false)
     end
 
     final = select(context, 1)[1]
-    println("\n\n#############################")
-    println("# Final Generation")
-    println("Best Candidate: $(final)")
-    println("\tFitness: $(fitness(final, inputs, outputs))")
+            println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    println("[#] Final Generation")
+    println("\t[!] Best Candidate: $final")
+    println("\t\t[>] Fitness: $(fitness(final, inputs, outputs))")
+            println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+    println()
+    simplifycmd(GT.toString(final), GT.symbolsExpr(final))
 end
 
 """
@@ -257,3 +235,4 @@ function genpopconfig(
 end
 
 end
+'
