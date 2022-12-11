@@ -3,8 +3,8 @@
     "output": "/kepler/kepler1618-output.csv",
     "generations": 25,
     "population-size": 500,
-    "mutation-prob": 0.5,
-    "parents-selected": 0.45,
+    "mutation-prob": 0.6,
+    "parents-selected": 0.4,
     "function-set": ["^2", "^3", "1/x", "+", "-", "*", "/", "sin"],
     "constant-set": [
         {
@@ -14,6 +14,10 @@
         {
             "symbol": "1",
             "value": 1
+        },
+        {
+            "symbol": "𝐺",
+            "value": 6.67408e-11
         }
     ],
     "parameter-set": [

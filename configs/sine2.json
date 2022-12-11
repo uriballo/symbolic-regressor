@@ -1,11 +1,11 @@
 {
     "input": "/sin-pow2/sin-pow2-input.csv",
     "output": "/sin-pow2/sin-pow2-output.csv",
-    "generations": 50,
+    "generations": 25,
     "population-size": 500,
-    "mutation-prob": 1,
-    "parents-selected": 0.33,
-    "function-set": ["^2", "cos", "+"],
+    "mutation-prob": 0.66,
+    "parents-selected": 0.35,
+    "function-set": ["^2", "cos", "+", "-", "*", "/"],
     "constant-set": [
         {
             "symbol": "1",
@@ -24,6 +24,6 @@
     ],
     "fitness-function": "errorfitness",
     "crossover-function": "crossover",
-    "mutation-function": "mutate",
+    "mutation-function": "3mutate",
     "selection-function": "elitist"
 }

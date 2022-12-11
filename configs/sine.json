@@ -1,10 +1,10 @@
 {
     "input": "/sin-nosin/sine-input.csv",
     "output": "/sin-nosin/sine-output.csv",
-    "generations": 10,
+    "generations": 25,
     "population-size": 500,
-    "mutation-prob": 0.1,
-    "parents-selected": 0.5,
+    "mutation-prob": 0.6,
+    "parents-selected": 0.35,
     "function-set": ["^2", "^3", "1/x", "+", "-", "*", "/", "cos", "tan", "sqrt"],
     "constant-set": [
         {
@@ -24,6 +24,6 @@
     ],
     "fitness-function": "errorfitness",
     "crossover-function": "crossover",
-    "mutation-function": "mutate",
+    "mutation-function": "2mutate",
     "selection-function": "elitist"
 }
