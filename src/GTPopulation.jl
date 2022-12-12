@@ -189,7 +189,7 @@ function parsefunction(func)
 end
 
 # Given configuration parameters returns a population context, which contains the population and the configuration.
-function genpopconfig(
+function genpopcontext(
     input,
     output,
     populationsize,

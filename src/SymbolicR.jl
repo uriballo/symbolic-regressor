@@ -1,4 +1,6 @@
 include("GTPopulation.jl")
+include("Utils.jl")
+
 using JSON
 
 import .GTPopulation as GP
@@ -27,7 +29,7 @@ end
 function initrun(srrun)
     iters = srrun.generations
 
-    population = GP.genpopconfig(
+    context = GP.genpopcontext(
         srrun.input,
         srrun.output,
         srrun.populationsize,
@@ -43,77 +45,15 @@ function initrun(srrun)
     )
 
     @time begin
-        GP.evolve(population, iters, true)
+        GP.evolve(context, iters, true)
     end
-end
-
-function help()
-    println(
-        "----------------------------------------------------------------------------------------",
-    )
-    println("Usage: SymbolicR.jl [OPTIONS]")
-    println("Options:")
-    println("\t--help,        -h\tPrint this help message")
-    println("\t--config,      -c\tSpecify the config file to use")
-    println("\t\t\t\t\t* e.g. kepler-config.json > /config/kepler-config.json")
-    println("\n[?] Do you want to see the JSON structure for the config file? (y/n)")
-    s = readline()
-    if s == "y"
-        println(
-            "----------------------------------------------------------------------------------------",
-        )
-        println("JSON Structure:")
-        println("\t{")
-        println("\t\t\"input\": \"file_in_config_folder.csv\",")
-        println("\t\t\"output\": \"file_in_config_folder.csv\",")
-        println("\t\t\"generations\": INT,")
-        println("\t\t\"population-size\": INT,")
-        println("\t\t\"mutation-prob:\": FLOAT,")
-        println("\t\t\"parents-selected\": FLOAT,")
-        println("\t\t\"function-set\": [\"^x\", \"1/x\", \"sin\", ...],")
-        println("\t\t\"constant-set\": [")
-        println("\t\t\t{")
-        println("\t\t\t\t\"symbol\": \"constant_symbol\",")
-        println("\t\t\t\t\"value\": FLOAT or INT")
-        println("\t\t\t},")
-        println("\t\t\t{")
-        println("\t\t\t\t\"symbol\": \"constant_symbol\",")
-        println("\t\t\t\t\"value\": FLOAT or INT")
-        println("\t\t\t},")
-        println("\t\t\t...")
-        println("\t\t],")
-        println("\t\t\"parameter-set\": [")
-        println("\t\t\t{")
-        println("\t\t\t\t\"symbol\": \"parameter_symbol\",")
-        println("\t\t\t\t\"index\": INT")
-        println("\t\t\t},")
-        println("\t\t\t{")
-        println("\t\t\t\t\"symbol\": \"parameter_symbol\",")
-        println("\t\t\t\t\"index\": INT")
-        println("\t\t\t},")
-        println("\t\t\t...")
-        println("\t\t],")
-        println("\t\t\"fitness-function\": \"function_name (must be in GTPopulation.jl)\",")
-        println(
-            "\t\t\"crossover-function\": \"function_name (must be in GTPopulation.jl)\",",
-        )
-        println("\t\t\"mutation-function\": \"function_name (must be in GTPopulation.jl)\"")
-        println(
-            "\t\t\"selection-function\": \"function_name (must be in GTPopulation.jl)\"",
-        )
-        println("\t}")
-    end
-    println(
-        "----------------------------------------------------------------------------------------",
-    )
-
 end
 
 function main()
     if "--help" ∈ ARGS || "-h" ∈ ARGS
         help()
     else
-        configpath = "kepler-no-noise.json"
+        configpath = "kepler.json"
         for arg in ARGS
             sparg = split(arg, "=")
             prefix = sparg[1]
